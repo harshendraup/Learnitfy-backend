@@ -13,3 +13,5 @@ const connectToDb = async () => {
 module.exports = {
   connectToDb,
 };
+// https://cloud.mongodb.com/v2/682ada6dac6e2967debc8b72#/overview
+// mongodb+srv://pinki13173:LearnItFy@learnitfy.b8xeugk.mongodb.net/

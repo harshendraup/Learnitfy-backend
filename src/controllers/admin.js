@@ -2,6 +2,7 @@ const { Category } = require("../model/category");
 const bcrypt= require('bcrypt')
 const { entityIdGenerator } = require("../utils/entityGenerator");
 const Admin= require('../model/admin');
+const Course= require('../model/courses')
 
 
 const handleAdminLogin = async (req, res) => {
@@ -47,7 +48,7 @@ const handleAddCategory = async (req, res) => {
   try {
     const payload = req.body;
 
-    if (!payload || !payload.categoryName) {
+    if (!payload || !payload.categoryName || !req.file) {
       return res.status(400).json({ message: "Invalid payload" });
     }
 
@@ -60,9 +61,13 @@ const handleAddCategory = async (req, res) => {
     }
 
     const categoryId = entityIdGenerator("CA");
+    
     const newCategory = new Category({
-      ...payload,
+      categoryName: payload.categoryName,
+      description: payload.description,
+      logo: req.file.filename, 
       categoryId,
+      status: "Active",
     });
 
     const savedCategory = await newCategory.save();
@@ -104,10 +109,60 @@ const handleGetCategory = async (req, res) => {
         .json({ message: "Internal server error", error: err.message });
     }
   };
+
+  const handleToAddCourses = async (req, res) => {
+    try {
+      const payload = req.body;
+  
+      if (
+        !payload.categoryName ||
+        !payload.courseName ||
+        !payload.description ||
+        !req.file
+      ) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+  
+      const categoryDetails = await Category.findOne({ categoryName: payload.categoryName });
+  
+      if (!categoryDetails) {
+        return res.status(400).json({ message: "Select a valid category from the list" });
+      }
+  
+      const courseId = entityIdGenerator("CI");
+  
+      const newCourse = new Course({
+        categoryName: payload.categoryName,
+        courseName: payload.courseName,
+        price: Number(payload.price) || 0,
+        description: payload.description,
+        duration: payload.duration || "",
+        image: req.file.filename, 
+        courseId,
+        status: "Active",
+      });
+  
+      const addedCourse = await newCourse.save();
+  
+      return res.status(201).json({
+        message: "Course added successfully",
+        data: addedCourse,
+      });
+  
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+      });
+    }
+  };
+  
   
 
 module.exports = {
   handleAdminLogin,
   handleAddCategory,
-  handleGetCategory
+  handleGetCategory,
+  handleToAddCourses
 };

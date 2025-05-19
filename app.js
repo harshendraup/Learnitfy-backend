@@ -6,7 +6,7 @@ const { connectToDb } = require('./src/config/db');
 const router = require('./src/routes');
 
 const app = express();
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 4000
 
 connectToDb();
 
@@ -35,7 +35,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 
-// Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log(`✅ Server running on PORT: ${PORT}`);
 });
