@@ -12,7 +12,8 @@ const {
   handleToDeleteCategory,
   handleToGetCourses,
   handleToDeleteCourse,
-  handleToUpdateCourse
+  handleToUpdateCourse,
+  handleToSendBrochure
 } = require("../controllers/admin");
 
 
@@ -29,6 +30,8 @@ router.post("/add/course", coursesImg.single("image"), handleToAddCourses);
 router.get("/get/courses", handleToGetCourses);
 router.delete("/delete/course", handleToDeleteCourse);
 router.patch('/update/course',handleToUpdateCourse)
+
+
 
 
 module.exports = router;

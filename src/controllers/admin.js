@@ -1,8 +1,12 @@
 const { Category } = require("../model/category");
+require("dotenv").config();
 const bcrypt = require("bcrypt");
 const { entityIdGenerator } = require("../utils/entityGenerator");
 const Admin = require("../model/admin");
 const Course = require("../model/courses");
+const sendEmail = require('../utils/email')
+const nodemailer = require("nodemailer");
+
 
 const handleAdminLogin = async (req, res) => {
   try {
@@ -66,7 +70,7 @@ const handleAddCategory = async (req, res) => {
     }
 
     const categoryId = entityIdGenerator("CA");
-
+    
     const newCategory = new Category({
       categoryName: payload.categoryName,
       description: payload.description,
@@ -133,7 +137,7 @@ const handleToUpdateCategory = async (req, res) => {
     if (categoryDetail) {
       const updateCategoryDetail = await Category.updateMany(
         { categoryId: payload.categoryId },
-        { payload },
+         payload ,
         { new: true }
       );
       if (!updateCategoryDetail) {
@@ -341,6 +345,7 @@ const handleToUpdateCourse = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {

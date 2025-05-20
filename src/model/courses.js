@@ -16,6 +16,15 @@ const coursesSchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    courseContent: [
+      {
+        moduleTitle: { type: String },
+        description: { type: String }
+      }
+    ],
+    pdf:{
+      type:String
+    },
     duration: {
       type: String,
     },

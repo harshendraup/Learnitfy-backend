@@ -1,9 +1,15 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
+const {
+  handleToContact,
+  getAllContacts,
+  handleToSendBrochure,
+} = require("../controllers/user");
 
-const { handleToContact, getAllContacts } = require('../controllers/user');
+router.post("/contact", handleToContact);
+router.get("/contact/users", getAllContacts);
 
-router.post('/contact', handleToContact);
-router.get('/contact/users', getAllContacts);  
+router.post("/send/brochure", handleToSendBrochure);
+
 module.exports = router;
