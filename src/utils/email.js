@@ -1,33 +1,37 @@
-const nodemailer = require("nodemailer");
-const twilio = require('twilio');
 require("dotenv").config();
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+const nodemailer = require("nodemailer");
 
-const sendEmail = async (to, subject, text) => {
+
+const sendEmailWithAttachment = async (to, subject, text, attachmentPath, attachmentName) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail", 
+      service: "gmail",
       auth: {
-        user: process.env.EMAIL, 
-        pass: process.env.PASSWORD, 
+        user: "pankaj1184783@gmail.com",
+        pass: "xviy efjj pdrd ohwn",
       },
     });
 
     const mailOptions = {
-      from: process.env.EMAIL,
+      from:"pankaj1184783@gmail.com",
       to,
       subject,
       text,
+      attachments: [
+        {
+          filename: attachmentName,
+          path: attachmentPath,
+        },
+      ],
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(" Email sent: ", info.response);
+    console.log("Email sent: ", info.response);
     return true;
   } catch (error) {
-    console.error(" Email sending error:", error);
+    console.error("Email sending error:", error);
     return false;
   }
 };
-module.exports={
-    sendEmail
-}
+
+module.exports = { sendEmailWithAttachment };

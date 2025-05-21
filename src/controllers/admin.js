@@ -4,9 +4,8 @@ const bcrypt = require("bcrypt");
 const { entityIdGenerator } = require("../utils/entityGenerator");
 const Admin = require("../model/admin");
 const Course = require("../model/courses");
-const sendEmail = require('../utils/email')
+const sendEmail = require("../utils/email");
 const nodemailer = require("nodemailer");
-
 
 const handleAdminLogin = async (req, res) => {
   try {
@@ -70,7 +69,7 @@ const handleAddCategory = async (req, res) => {
     }
 
     const categoryId = entityIdGenerator("CA");
-    
+
     const newCategory = new Category({
       categoryName: payload.categoryName,
       description: payload.description,
@@ -137,7 +136,7 @@ const handleToUpdateCategory = async (req, res) => {
     if (categoryDetail) {
       const updateCategoryDetail = await Category.updateMany(
         { categoryId: payload.categoryId },
-         payload ,
+        payload,
         { new: true }
       );
       if (!updateCategoryDetail) {
@@ -241,6 +240,113 @@ const handleToAddCourses = async (req, res) => {
     });
   }
 };
+
+const handleToAddContent = async (req, res) => {
+  try {
+    const { courseId, courseContent } = req.body;
+
+    if (
+      !courseId ||
+      !Array.isArray(courseContent) ||
+      courseContent.length === 0
+    ) {
+      return res.status(400).json({
+        message:
+          "courseId and courseContent array are required with at least one item",
+      });
+    }
+
+    const isValidContent = courseContent.every(
+      (item) => item.moduleTitle && item.description
+    );
+    if (!isValidContent) {
+      return res.status(400).json({
+        message:
+          "Each courseContent item must have moduleTitle and description",
+      });
+    }
+
+    const course = await Course.findOne({ courseId });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+    if (course) {
+      const addContent = await Course.updateOne(
+        { courseId },
+        {
+          $push: {
+            courseContent: { $each: courseContent },
+          },
+          $set: {
+            updateOn: new Date(),
+          },
+        }
+      );
+
+      return res.status(200).json({
+        message: "Course content added successfully",
+        data: addContent,
+      });
+    } else {
+      return res.status(200).json({
+        message: {},
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+
+const handleToUploadPdfOfCourse = async (req, res) => {
+  try {
+    const  payload = req.body;
+
+    if (!payload.courseId || !req.file) {
+      return res.status(400).json({ message: "Invalid payload: courseId and pdf file are required." });
+    }
+
+    const courseDetail = await Course.findOne({ courseId:payload.courseId });
+
+    if (!courseDetail) {
+      return res.status(404).json({ message: "Course not found with provided courseId." });
+    }
+    if(courseDetail){
+      const updatedCourse = await Course.updateOne(
+        { courseId :payload.courseId},
+        { $set: { pdf: req.file.filename, updateOn: new Date() } }
+      );
+  
+      return res.status(200).json({
+        message: "PDF uploaded and linked to course successfully",
+        data:{
+        file: req.file.filename,
+        updatedCourse:updatedCourse
+        }
+      });
+    }
+    else{
+      return res.status(200).json({
+        message: {},
+
+      });
+    }
+   
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+
 const handleToGetCourses = async (req, res) => {
   try {
     const { courseName, courseId } = req.query;
@@ -321,22 +427,16 @@ const handleToUpdateCourse = async (req, res) => {
       { new: true }
     );
 
-    if(updatedCourse){
-
+    if (updatedCourse) {
       return res.status(200).json({
         message: "Course updated successfully",
         data: updatedCourse,
       });
-
-    }
-    else{
+    } else {
       return res.status(200).json({
         message: {},
-
       });
     }
-
-   
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -345,8 +445,6 @@ const handleToUpdateCourse = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   handleAdminLogin,
@@ -357,5 +455,7 @@ module.exports = {
   handleToDeleteCategory,
   handleToGetCourses,
   handleToDeleteCourse,
-  handleToUpdateCourse
+  handleToUpdateCourse,
+  handleToAddContent,
+  handleToUploadPdfOfCourse
 };
