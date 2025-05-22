@@ -411,6 +411,9 @@ const handleToUpdateCourse = async (req, res) => {
   try {
     const payload = req.body;
 
+    console.log("Payload:", payload);
+    console.log("File:", req.file);
+
     if (!payload || !payload.courseId) {
       return res.status(400).json({ message: "Invalid payload fields" });
     }
@@ -421,30 +424,39 @@ const handleToUpdateCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
+    const updateData = {
+      categoryName: payload.categoryName || courseDetail.categoryName,
+      courseName: payload.courseName || courseDetail.courseName,
+      price: payload.price || courseDetail.price,
+      description: payload.description || courseDetail.description,
+      duration: payload.duration || courseDetail.duration,
+      status: payload.status || courseDetail.status,
+      updateOn: new Date(),
+    };
+
+    if (req.file && req.file.filename) {
+      updateData.image = req.file.filename;
+    }
+
     const updatedCourse = await Course.findOneAndUpdate(
       { courseId: payload.courseId },
-      payload,
+      { $set: updateData },
       { new: true }
     );
 
-    if (updatedCourse) {
-      return res.status(200).json({
-        message: "Course updated successfully",
-        data: updatedCourse,
-      });
-    } else {
-      return res.status(200).json({
-        message: {},
-      });
-    }
+    return res.status(200).json({
+      message: "Course updated successfully",
+      data: updatedCourse,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Error updating course:", err);
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
     });
   }
 };
+
 
 module.exports = {
   handleAdminLogin,

@@ -24,14 +24,14 @@ router.post("/addCategory", categoryLogo.single("logo"), handleAddCategory);
 router.post("/login", handleAdminLogin);
 router.get("/get/category", handleGetCategory);
 router.patch("/update/category", handleToUpdateCategory)
-router.delete("/delete/category",handleToDeleteCategory)
+router.delete("/delete/category", categoryLogo.single("logo"),handleToDeleteCategory)
 
 
 
 router.post("/add/course", coursesImg.single("image"), handleToAddCourses);
 router.get("/get/courses", handleToGetCourses);
 router.delete("/delete/course", handleToDeleteCourse);
-router.patch('/update/course',handleToUpdateCourse)
+router.patch('/update/course', coursesImg.single("image"),handleToUpdateCourse)
 
 // for content routes
 router.post('/add/content',handleToAddContent)
