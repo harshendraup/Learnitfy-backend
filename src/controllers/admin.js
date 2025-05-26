@@ -6,6 +6,8 @@ const Admin = require("../model/admin");
 const Course = require("../model/courses");
 const sendEmail = require("../utils/email");
 const nodemailer = require("nodemailer");
+const path = require('path');
+const fs = require('fs');
 
 const handleAdminLogin = async (req, res) => {
   try {
@@ -119,45 +121,52 @@ const handleGetCategory = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-
 const handleToUpdateCategory = async (req, res) => {
   try {
-    const payload = req.body;
+    const { categoryId, ...restPayload } = req.body;
+    const logo = req.file;
 
-    if (!payload || !payload.categoryId) {
-      return res.status(404).json({ message: "invalid payload field" });
+    if (!categoryId) {
+      return res.status(400).json({ message: "Category ID is required" });
     }
-    const categoryDetail = await Category.find({
-      categoryId: payload.categoryId,
-    });
+
+    const categoryDetail = await Category.findOne({ categoryId });
+
     if (!categoryDetail) {
-      return res.status(404).json({ message: "category details not found" });
+      return res.status(404).json({ message: "Category not found" });
     }
-    if (categoryDetail) {
-      const updateCategoryDetail = await Category.updateMany(
-        { categoryId: payload.categoryId },
-        payload,
-        { new: true }
-      );
-      if (!updateCategoryDetail) {
-        return res
-          .status(404)
-          .json({ message: "not able to update the category Details" });
+
+    if (logo) {
+      const oldLogoPath = path.join(__dirname, '../categoryLogo/', categoryDetail.logo);
+      if (fs.existsSync(oldLogoPath)) {
+        fs.unlinkSync(oldLogoPath);
       }
-      if (updateCategoryDetail) {
-        return res.status(200).json({
-          message: "Category updated successfully",
-          data: updateCategoryDetail,
-        });
-      }
+      restPayload.logo = logo.filename; 
     }
+
+    const updated = await Category.findOneAndUpdate(
+      { categoryId },
+      restPayload,
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(500).json({ message: "Failed to update category" });
+    }
+
+    return res.status(200).json({
+      message: "Category updated successfully",
+      data: updated
+    });
+
   } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    console.error("Update Error:", err);
+    return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+
+
 const handleToDeleteCategory = async (req, res) => {
   try {
     const { categoryId } = req.body;
