@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const adminRoutes = require('./admin');
-const userRoutes = require('./user')
+const userRoutes = require('./user');
 
 const defaultRoutes = [
   {
@@ -10,10 +10,9 @@ const defaultRoutes = [
     route: adminRoutes,
   },
   {
-    path:'/api/user',
-    route:userRoutes
-  }
-
+    path: '/api/user',
+    route: userRoutes,
+  },
 ];
 
 defaultRoutes.forEach((route) => {

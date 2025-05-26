@@ -6,7 +6,7 @@ const { connectToDb } = require('./src/config/db');
 const router = require('./src/routes');
 
 const app = express();
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 4000;
 
 connectToDb();
 
@@ -24,17 +24,13 @@ app.get('/api/health', (req, res) => {
 
 app.use(router);
 
-
-
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
-
   app.get('*', (req, res) => 
     res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'))
   );
 }
 
-
-app.listen(PORT, '0.0.0.0',() => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on PORT: ${PORT}`);
 });

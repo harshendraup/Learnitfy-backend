@@ -6,8 +6,8 @@ const Admin = require("../model/admin");
 const Course = require("../model/courses");
 const sendEmail = require("../utils/email");
 const nodemailer = require("nodemailer");
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 
 const handleAdminLogin = async (req, res) => {
   try {
@@ -121,6 +121,7 @@ const handleGetCategory = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
+
 const handleToUpdateCategory = async (req, res) => {
   try {
     const { categoryId, ...restPayload } = req.body;
@@ -137,11 +138,15 @@ const handleToUpdateCategory = async (req, res) => {
     }
 
     if (logo) {
-      const oldLogoPath = path.join(__dirname, '../categoryLogo/', categoryDetail.logo);
+      const oldLogoPath = path.join(
+        __dirname,
+        "../categoryLogo/",
+        categoryDetail.logo
+      );
       if (fs.existsSync(oldLogoPath)) {
         fs.unlinkSync(oldLogoPath);
       }
-      restPayload.logo = logo.filename; 
+      restPayload.logo = logo.filename;
     }
 
     const updated = await Category.findOneAndUpdate(
@@ -156,16 +161,15 @@ const handleToUpdateCategory = async (req, res) => {
 
     return res.status(200).json({
       message: "Category updated successfully",
-      data: updated
+      data: updated,
     });
-
   } catch (err) {
     console.error("Update Error:", err);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
-
-
 
 const handleToDeleteCategory = async (req, res) => {
   try {
@@ -233,6 +237,16 @@ const handleToAddCourses = async (req, res) => {
         status: "Active",
       });
       const addedCourse = await newCourse.save();
+
+      await Category.updateOne(
+        { categoryName: payload.categoryName },
+        {
+          $push: {
+            "courseDetails.courses": payload.courseName,
+            "courseDetails.courseId": courseId,
+          },
+        }
+      );
 
       return res.status(201).json({
         message: "Course added successfully",
@@ -311,41 +325,43 @@ const handleToAddContent = async (req, res) => {
   }
 };
 
-
 const handleToUploadPdfOfCourse = async (req, res) => {
   try {
-    const  payload = req.body;
+    const payload = req.body;
 
     if (!payload.courseId || !req.file) {
-      return res.status(400).json({ message: "Invalid payload: courseId and pdf file are required." });
+      return res
+        .status(400)
+        .json({
+          message: "Invalid payload: courseId and pdf file are required.",
+        });
     }
 
-    const courseDetail = await Course.findOne({ courseId:payload.courseId });
+    const courseDetail = await Course.findOne({ courseId: payload.courseId });
 
     if (!courseDetail) {
-      return res.status(404).json({ message: "Course not found with provided courseId." });
+      return res
+        .status(404)
+        .json({ message: "Course not found with provided courseId." });
     }
-    if(courseDetail){
+    if (courseDetail) {
       const updatedCourse = await Course.updateOne(
-        { courseId :payload.courseId},
+        { courseId: payload.courseId },
         { $set: { pdf: req.file.filename, updateOn: new Date() } }
       );
-  
+
       return res.status(200).json({
         message: "PDF uploaded and linked to course successfully",
-        data:{
-        file: req.file.filename,
-        updatedCourse:updatedCourse
-        }
+        data: {
+          file: req.file.filename,
+          updatedCourse: updatedCourse,
+        },
       });
-    }
-    else{
+    } else {
       return res.status(200).json({
         message: {},
-
       });
     }
-   
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -354,7 +370,6 @@ const handleToUploadPdfOfCourse = async (req, res) => {
     });
   }
 };
-
 
 const handleToGetCourses = async (req, res) => {
   try {
@@ -392,23 +407,47 @@ const handleToDeleteCourse = async (req, res) => {
   try {
     const payload = req.body;
 
-    if (!payload || !payload.courseId) {
-      return res.status(400).json({ message: "Missing courseId fields" });
+    if (!payload.courseId) {
+      return res.status(400).json({ message: "Missing courseId field" });
     }
-    const courseDetail = await Course.find({ courseId: payload.courseId });
-    if (courseDetail) {
-      const deleteCourse = await Course.deleteOne({
-        courseId: payload.courseId,
-      });
 
-      if (deleteCourse) {
-        return res.status(200).json({ message: "Course deleted successfully" });
+    const courseDetail = await Course.findOne({ courseId: payload.courseId });
+
+    if (!courseDetail) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const imagePath = path.join(
+      __dirname,
+      "../coursesImg/",
+      courseDetail.image
+    );
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    const deleteResult = await Course.deleteOne({
+      courseId: courseDetail.courseId,
+    });
+
+    await Category.updateOne(
+      { categoryName: courseDetail.categoryName },
+      {
+        $pull: {
+          "courseDetails.courses": courseDetail.courseName,
+          "courseDetails.courseId": courseDetail.courseId,
+        },
       }
+    );
+
+
+    if (deleteResult.deletedCount === 1) {
+      return res.status(200).json({ message: "Course deleted successfully" });
     } else {
-      return res.status(200).json({ message: {} });
+      return res.status(500).json({ message: "Failed to delete course" });
     }
   } catch (err) {
-    console.error(err);
+    console.error("Delete Error:", err);
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
@@ -418,40 +457,42 @@ const handleToDeleteCourse = async (req, res) => {
 
 const handleToUpdateCourse = async (req, res) => {
   try {
-    const payload = req.body;
+    const { courseId, ...restPayload } = req.body;
+    const imageFile = req.file;
 
-    console.log("Payload:", payload);
-    console.log("File:", req.file);
-
-    if (!payload || !payload.courseId) {
-      return res.status(400).json({ message: "Invalid payload fields" });
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
     }
 
-    const courseDetail = await Course.findOne({ courseId: payload.courseId });
+    const courseDetail = await Course.findOne({ courseId });
 
     if (!courseDetail) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    const updateData = {
-      categoryName: payload.categoryName || courseDetail.categoryName,
-      courseName: payload.courseName || courseDetail.courseName,
-      price: payload.price || courseDetail.price,
-      description: payload.description || courseDetail.description,
-      duration: payload.duration || courseDetail.duration,
-      status: payload.status || courseDetail.status,
-      updateOn: new Date(),
-    };
-
-    if (req.file && req.file.filename) {
-      updateData.image = req.file.filename;
+    if (imageFile) {
+      const oldImagePath = path.join(
+        __dirname,
+        "../coursesImg/",
+        courseDetail.image
+      );
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+      restPayload.image = imageFile.filename;
     }
 
+    restPayload.updateOn = new Date();
+
     const updatedCourse = await Course.findOneAndUpdate(
-      { courseId: payload.courseId },
-      { $set: updateData },
+      { courseId },
+      restPayload,
       { new: true }
     );
+
+    if (!updatedCourse) {
+      return res.status(500).json({ message: "Failed to update course" });
+    }
 
     return res.status(200).json({
       message: "Course updated successfully",
@@ -465,7 +506,6 @@ const handleToUpdateCourse = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   handleAdminLogin,

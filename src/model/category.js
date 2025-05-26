@@ -32,7 +32,15 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: "Inactive",
     },
-  },
+    courseDetails: {
+      courses: [{
+        type: String
+      }],
+      courseId: [{
+        type: String
+      }]
+    }
+  },   
   {
     versionKey: false,
   }
