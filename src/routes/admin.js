@@ -24,8 +24,7 @@ router.post("/addCategory", categoryLogo.single("logo"), handleAddCategory);
 router.post("/login", handleAdminLogin);
 router.get("/get/category", handleGetCategory);
 router.patch("/update/category", categoryLogo.single("logo"), handleToUpdateCategory);
-router.delete("/delete/category", categoryLogo.single("logo"),handleToDeleteCategory)
-
+router.delete("/delete/category", handleToDeleteCategory);
 
 
 router.post("/add/course", coursesImg.single("image"), handleToAddCourses);
