@@ -58,7 +58,7 @@ const handleAddCategory = async (req, res) => {
   try {
     const payload = req.body;
 
-    if (!payload || !payload.categoryName || !description) {
+    if (!payload || !payload.categoryName || !payload.description) {
       return res.status(400).json({ message: "Invalid payload" });
     }
 
