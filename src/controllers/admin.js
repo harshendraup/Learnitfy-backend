@@ -75,7 +75,7 @@ const handleAddCategory = async (req, res) => {
     const newCategory = new Category({
       categoryName: payload.categoryName,
       description: payload.description,
-      logo: req.file.filename,
+      logo: payload.logo,
       categoryId,
       status: "Active",
     });
