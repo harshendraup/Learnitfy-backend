@@ -204,7 +204,6 @@ const handleToAddCourses = async (req, res) => {
       !payload.categoryName ||
       !payload.courseName ||
       !payload.description ||
-      !req.file ||
       !payload.price
     ) {
       return res.status(400).json({ message: "Missing required fields" });
