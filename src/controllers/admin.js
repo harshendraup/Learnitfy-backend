@@ -231,7 +231,7 @@ const handleToAddCourses = async (req, res) => {
         price: Number(payload.price) || 0,
         description: payload.description,
         duration: payload.duration || "",
-        image: req.file.filename,
+        image: payload.image,
         courseId,
         status: "Active",
       });
