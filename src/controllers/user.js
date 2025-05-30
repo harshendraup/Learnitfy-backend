@@ -148,8 +148,28 @@ Your Learning Team`;
   }
 };
 
+const getAllBrochureRequests = async (req, res) => {
+  try {
+
+
+    const users = await User.find({}).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Brochure requests fetched successfully.",
+      data: users,
+    });
+  } catch (err) {
+    console.error("Error fetching brochure requests:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   handleToContact,
   getAllContacts,
   handleToSendBrochure,
+  getAllBrochureRequests
 };
