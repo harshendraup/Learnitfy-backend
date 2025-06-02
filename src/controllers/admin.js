@@ -54,44 +54,54 @@ const handleAdminLogin = async (req, res) => {
   }
 };
 
-const handleAddCategory = async (req, res) => {
+const handleAddCategory = async (req, res, next) => {
   try {
     const payload = req.body;
 
-    if (!payload || !payload.categoryName || !payload.description) {
-      return res.status(400).json({ message: "Invalid payload" });
+    const logoFile = req.file;
+    const logoUrl = logoFile?.location || "";
+
+    if (!payload.categoryName || !payload.description) {
+      const error = new Error("Category name and description are required");
+      error.statusCode = 422;
+      return next(error);
     }
 
-    const existingCategory = await Category.find({
-      categoryName: payload.categoryName,
-    });
+    const categoryName = payload.categoryName.trim();
 
-    if (existingCategory.length > 0) {
-      return res.status(409).json({ message: "This category already exists" });
+    const existingCategory = await Category.findOne({ categoryName });
+    if (existingCategory) {
+      const error = new Error("Category already exists");
+      error.statusCode = 409;
+      return next(error);
     }
 
     const categoryId = entityIdGenerator("CA");
 
     const newCategory = new Category({
-      categoryName: payload.categoryName,
-      description: payload.description,
-      logo: payload.logo,
+      categoryName,
+      description: payload.description.trim(),
+      logo: logoUrl,
       categoryId,
       status: "Active",
+      createdBy: "Admin",
     });
 
     const savedCategory = await newCategory.save();
 
-    return res
-      .status(201)
-      .json({ message: "Category added successfully", data: savedCategory });
+    return res.status(201).json({
+      message: "Category added successfully",
+      data: savedCategory,
+    });
   } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    const error = new Error(err.message);
+    error.statusCode = 500;
+    return next(error);
   }
 };
+
+
+
 
 const handleGetCategory = async (req, res) => {
   try {
@@ -214,46 +224,49 @@ const handleToAddCourses = async (req, res) => {
     });
 
     if (!categoryDetails) {
-      return res
-        .status(400)
-        .json({ message: "Select a valid category from the list" });
+      return res.status(400).json({
+        message: "Select a valid category from the list",
+      });
+    }
+
+    const existingCourse = await Course.findOne({
+      courseName: payload.courseName,
+    });
+
+    if (existingCourse) {
+      return res.status(400).json({ message: "Course already added" });
     }
 
     const courseId = entityIdGenerator("CI");
-    const courseDetail = await Course.findOne({
+
+    const newCourse = new Course({
+      categoryName: payload.categoryName,
+      categoryId: categoryDetails.categoryId,
       courseName: payload.courseName,
+      price: Number(payload.price) || 0,
+      description: payload.description,
+      duration: payload.duration || "",
+      image: req.file?.location || "", 
+      courseId,
+      status: "Active",
     });
-    if (!courseDetail) {
-      const newCourse = new Course({
-        categoryName: payload.categoryName,
-        categoryId: categoryDetails.categoryId,
-        courseName: payload.courseName,
-        price: Number(payload.price) || 0,
-        description: payload.description,
-        duration: payload.duration || "",
-        image: payload.image,
-        courseId,
-        status: "Active",
-      });
-      const addedCourse = await newCourse.save();
 
-      await Category.updateOne(
-        { categoryName: payload.categoryName },
-        {
-          $push: {
-            "courseDetails.courses": payload.courseName,
-            "courseDetails.courseId": courseId,
-          },
-        }
-      );
+    const addedCourse = await newCourse.save();
 
-      return res.status(201).json({
-        message: "Course added successfully",
-        data: addedCourse,
-      });
-    } else {
-      return res.status(400).json({ message: "course already added" });
-    }
+    await Category.updateOne(
+      { categoryName: payload.categoryName },
+      {
+        $push: {
+          "courseDetails.courses": payload.courseName,
+          "courseDetails.courseId": courseId,
+        },
+      }
+    );
+
+    return res.status(201).json({
+      message: "Course added successfully",
+      data: addedCourse,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -262,6 +275,7 @@ const handleToAddCourses = async (req, res) => {
     });
   }
 };
+
 
 const handleToAddContent = async (req, res) => {
   try {
