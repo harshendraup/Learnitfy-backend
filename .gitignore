@@ -1,44 +1,4 @@
-# Node.js dependencies
-node_modules/
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# AWS credentials or other secret keys stored in files (if any)
-*.pem
-*.key
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# MacOS system files
-.DS_Store
-
-# IDE/editor settings
-.vscode/
-.idea/
-
-# Build output (if any)
-dist/
-build/
-
-# Ignore local database files (if any)
-*.sqlite
-*.db
-
-# Ignore coverage directory from tests
-coverage/
+node_modules
+package.json
+package-lock.json
