@@ -5,11 +5,10 @@ const multerS3 = require("multer-s3");
 const path = require("path");
 
 const s3 = new AWS.S3({
-  region: process.env.AWS_REGION || "ap-south-1",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIAZHBVXBH7SRARE66M",
+  region: process.env.AWS_REGION ,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey:
-    process.env.AWS_SECRET_ACCESS_KEY ||
-    "uYlENQ+Ya8Bxblyfpy1OQQej1tCuNpwhQAVTMdat",
+    process.env.AWS_SECRET_ACCESS_KEY,
 });
 
 const imageVideoFilter = (req, file, cb) => {
@@ -35,7 +34,7 @@ const s3Storage = (fileFilter) => {
   return multer({
     storage: multerS3({
       s3,
-      bucket: process.env.AWS_BUCKET_NAME || "prod-learnitfy-server-s3-01",
+      bucket: process.env.AWS_BUCKET_NAME,
       contentType: multerS3.AUTO_CONTENT_TYPE,
       metadata: (req, file, cb) => {
         cb(null, { fieldName: file.fieldname });

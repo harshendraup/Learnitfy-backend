@@ -11,11 +11,10 @@ const fs = require("fs");
 const AWS = require("aws-sdk");
 
 const s3 = new AWS.S3({
-  region: process.env.AWS_REGION || "ap-south-1",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIAZHBVXBH7SRARE66M",
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey:
-    process.env.AWS_SECRET_ACCESS_KEY ||
-    "uYlENQ+Ya8Bxblyfpy1OQQej1tCuNpwhQAVTMdat",
+    process.env.AWS_SECRET_ACCESS_KEY 
 });
 
 const handleAdminLogin = async (req, res) => {
