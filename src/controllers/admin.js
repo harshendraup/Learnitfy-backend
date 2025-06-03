@@ -8,6 +8,15 @@ const sendEmail = require("../utils/email");
 const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION || "ap-south-1",
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIAZHBVXBH7SRARE66M",
+  secretAccessKey:
+    process.env.AWS_SECRET_ACCESS_KEY ||
+    "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",
+});
 
 const handleAdminLogin = async (req, res) => {
   try {
@@ -135,7 +144,7 @@ const handleGetCategory = async (req, res) => {
 const handleToUpdateCategory = async (req, res) => {
   try {
     const { categoryId, ...restPayload } = req.body;
-    const logo = req.file;
+    const logo = req.file; 
 
     if (!categoryId) {
       return res.status(400).json({ message: "Category ID is required" });
@@ -146,17 +155,24 @@ const handleToUpdateCategory = async (req, res) => {
     if (!categoryDetail) {
       return res.status(404).json({ message: "Category not found" });
     }
-
     if (logo) {
-      const oldLogoPath = path.join(
-        __dirname,
-        "../categoryLogo/",
-        categoryDetail.logo
-      );
-      if (fs.existsSync(oldLogoPath)) {
-        fs.unlinkSync(oldLogoPath);
+      if (categoryDetail.logo) {
+        const oldKey = categoryDetail.logo;
+    
+        console.log("🧾 Deleting old S3 object with key:", oldKey, typeof oldKey); 
+    
+        await s3
+          .deleteObject({
+            Bucket: process.env.AWS_BUCKET_NAME || "prod-learnitfy-server-s3-01",
+            Key: String(oldKey), 
+          })
+          .promise()
+          .catch((err) =>
+            console.warn("S3 old logo delete warning (not fatal):", err.message)
+          );
       }
-      restPayload.logo = logo.filename;
+    
+      restPayload.logo = logo.key; 
     }
 
     const updated = await Category.findOneAndUpdate(
@@ -338,16 +354,15 @@ const handleToAddContent = async (req, res) => {
   }
 };
 
+
 const handleToUploadPdfOfCourse = async (req, res) => {
   try {
     const payload = req.body;
 
     if (!payload.courseId || !req.file) {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid payload: courseId and pdf file are required.",
-        });
+      return res.status(400).json({
+        message: "Invalid payload: courseId and pdf file are required.",
+      });
     }
 
     const courseDetail = await Course.findOne({ courseId: payload.courseId });
@@ -357,24 +372,24 @@ const handleToUploadPdfOfCourse = async (req, res) => {
         .status(404)
         .json({ message: "Course not found with provided courseId." });
     }
-    if (courseDetail) {
-      const updatedCourse = await Course.updateOne(
-        { courseId: payload.courseId },
-        { $set: { pdf: req.file.filename, updateOn: new Date() } }
-      );
 
-      return res.status(200).json({
-        message: "PDF uploaded and linked to course successfully",
-        data: {
-          file: req.file.filename,
-          updatedCourse: updatedCourse,
+    const updatedCourse = await Course.updateOne(
+      { courseId: payload.courseId },
+      {
+        $set: {
+          pdf: req.file.location,
+          updateOn: new Date(),
         },
-      });
-    } else {
-      return res.status(200).json({
-        message: {},
-      });
-    }
+      }
+    );
+
+    return res.status(200).json({
+      message: "PDF uploaded and linked to course successfully",
+      data: {
+        file: req.file.location, 
+        updatedCourse: updatedCourse,
+      },
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({

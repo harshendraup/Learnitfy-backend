@@ -5,9 +5,11 @@ const multerS3 = require("multer-s3");
 const path = require("path");
 
 const s3 = new AWS.S3({
-  region: "ap-south-1",
-  accessKeyId: "AKIAZHBVXBH7SRARE66M",
-  secretAccessKey: "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",
+  region: process.env.AWS_REGION || "ap-south-1",
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "AKIAZHBVXBH7SRARE66M",
+  secretAccessKey:
+    process.env.AWS_SECRET_ACCESS_KEY ||
+    "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",
 });
 
 const imageVideoFilter = (req, file, cb) => {
@@ -33,19 +35,21 @@ const s3Storage = (fileFilter) => {
   return multer({
     storage: multerS3({
       s3,
-      bucket: "prod-learnitfy-server-s3-01",
+      bucket: process.env.AWS_BUCKET_NAME || "prod-learnitfy-server-s3-01",
       contentType: multerS3.AUTO_CONTENT_TYPE,
       metadata: (req, file, cb) => {
         cb(null, { fieldName: file.fieldname });
       },
       key: (req, file, cb) => {
         const ext = path.extname(file.originalname);
-        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+        const filename = `${Date.now()}-${Math.round(
+          Math.random() * 1e9
+        )}${ext}`;
         cb(null, filename);
       },
     }),
     fileFilter,
-    limits: { fileSize: 100 * 1024 * 1024 }, 
+    limits: { fileSize: 100 * 1024 * 1024 },
   });
 };
 
@@ -53,6 +57,7 @@ module.exports = {
   categoryLogo: s3Storage(imageVideoFilter),
   coursesImg: s3Storage(imageVideoFilter),
   coursePdf: s3Storage(pdfFilter),
+  s3
 };
 
 // prod-learnitfy-server-s3-01

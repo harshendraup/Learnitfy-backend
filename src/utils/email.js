@@ -2,25 +2,26 @@ require("dotenv").config();
 const nodemailer = require("nodemailer");
 
 
-const sendEmailWithAttachment = async (to, subject, text, attachmentPath, attachmentName) => {
+const sendEmailWithAttachment = async (to, subject, text, attachmentBuffer, attachmentName, contentType) => {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "pankaj1184783@gmail.com",
-        pass: "xviy efjj pdrd ohwn",
+        user:process.env.EMAIL,
+        pass: process.env.PASSWORD,
       },
     });
 
     const mailOptions = {
-      from:"pankaj1184783@gmail.com",
+      from: "your-email@gmail.com",
       to,
       subject,
       text,
       attachments: [
         {
           filename: attachmentName,
-          path: attachmentPath,
+          content: attachmentBuffer,
+          contentType,
         },
       ],
     };
@@ -33,5 +34,6 @@ const sendEmailWithAttachment = async (to, subject, text, attachmentPath, attach
     return false;
   }
 };
+
 
 module.exports = { sendEmailWithAttachment };
