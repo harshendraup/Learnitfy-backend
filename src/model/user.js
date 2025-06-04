@@ -12,7 +12,11 @@ const userSchema = new mongoose.Schema({
     },
     courseId:{
         type:String
-    }
+    },
+    date: {
+        type: Date,
+        default: Date.now
+      }
 })
 
 const User = mongoose.model('User', userSchema);

@@ -141,6 +141,7 @@ Your Learning Team`;
         categoryName: courseDetail.categoryName,
         courseName: courseDetail.courseName,
         courseId: courseDetail.courseId,
+        date: new Date()
       });
 
       await newUser.save();
