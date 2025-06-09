@@ -3,6 +3,7 @@ const router = express.Router();
 
 const adminRoutes = require('./admin');
 const userRoutes = require('./user');
+const faqRoute =require('./faq'); 
 
 const defaultRoutes = [
   {
@@ -13,6 +14,10 @@ const defaultRoutes = [
     path: '/api/user',
     route: userRoutes,
   },
+  {
+    path:'/api/faq',
+    route:faqRoute
+  }
 ];
 
 defaultRoutes.forEach((route) => {
