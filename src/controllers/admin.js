@@ -434,49 +434,46 @@ const handleToGetCourses = async (req, res) => {
   }
 };
 
-const handleToDeleteCourse = async (req, res) => {
-  try {
-    const { courseId } = req.body;
-
-    if (!courseId) {
-      return res.status(400).json({ message: "Missing courseId field" });
-    }
-
-    const courseDetail = await Course.findOne({ courseId });
-
-    if (!courseDetail) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-
-    if (courseDetail.image) {
-      await deleteFromS3(courseDetail.image);
-    }
-
-    const deleteResult = await Course.deleteOne({ courseId });
-
-    await Category.updateOne(
-      { categoryName: courseDetail.categoryName },
-      {
-        $pull: {
-          "courseDetails.courses": courseDetail.courseName,
-          "courseDetails.courseId": courseDetail.courseId,
-        },
+  const handleToDeleteCourse = async (req, res) => {
+    try {
+      const { courseId } = req.body;
+  
+      if (!courseId) {
+        return res.status(400).json({ message: "Missing courseId" });
       }
-    );
-
-    if (deleteResult.deletedCount === 1) {
-      return res.status(200).json({ message: "Course deleted successfully" });
-    } else {
-      return res.status(500).json({ message: "Failed to delete course" });
+  
+      const course = await Course.find({ courseId });
+  
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+  
+      const associatedCourses = await Course.find({ courseId });
+  
+      for (let course of associatedCourses) {
+        if (course.image) {
+          try {
+            await deleteFromS3(course.image);
+          } catch (err) {
+            console.warn(`Failed to delete image ${course.image}: ${err.message}`);
+          }
+        }
+      }
+  
+  
+      const deleteResult = await Course.delete({ courseId });
+  
+      if (deleteResult.deletedCount === 1) {
+        return res.status(200).json({ message: "Category and its courses deleted successfully" });
+      } else {
+        return res.status(500).json({ message: "Failed to delete category" });
+      }
+  
+    } catch (err) {
+      console.error("Delete Category Error:", err);
+      return res.status(500).json({ message: "Internal server error", error: err.message });
     }
-  } catch (err) {
-    console.error("Delete Error:", err);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: err.message,
-    });
-  }
-};
+  };
 
 const handleToUpdateCourse = async (req, res) => {
   try {
