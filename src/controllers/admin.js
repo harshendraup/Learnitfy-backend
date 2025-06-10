@@ -401,7 +401,7 @@ const handleToUploadPdfOfCourse = async (req, res) => {
 
 const handleToGetCourses = async (req, res) => {
   try {
-    const { courseName, courseId } = req.query;
+    const { courseName, courseId ,categoryName} = req.query;
 
     let query = {};
 
@@ -410,6 +410,9 @@ const handleToGetCourses = async (req, res) => {
     }
     if (courseId) {
       query.courseId = courseId;
+    }
+    if(categoryName){
+      query.categoryName=categoryName
     }
 
     const coursesList = await Course.find(query);
