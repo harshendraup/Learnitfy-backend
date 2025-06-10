@@ -50,12 +50,28 @@ const s3Storage = (fileFilter) => {
     limits: { fileSize: 100 * 1024 * 1024 },
   });
 };
+const deleteFromS3 = async (fileKey) => {
+  try {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileKey, 
+    };
+
+    await s3.deleteObject(params).promise();
+    console.log(`S3 delete successful: ${fileKey}`);
+  } catch (err) {
+    console.error("S3 delete error:", err.message);
+    
+  }
+};
+
 
 module.exports = {
   categoryLogo: s3Storage(imageVideoFilter),
   coursesImg: s3Storage(imageVideoFilter),
   coursePdf: s3Storage(pdfFilter),
-  s3
+  s3,
+  deleteFromS3
 };
 
 // prod-learnitfy-server-s3-01

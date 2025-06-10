@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const AWS = require("aws-sdk");
+const deleteFromS3 = require('../middleware/multer-s3')
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -432,30 +433,23 @@ const handleToGetCourses = async (req, res) => {
 
 const handleToDeleteCourse = async (req, res) => {
   try {
-    const payload = req.body;
+    const { courseId } = req.body;
 
-    if (!payload.courseId) {
+    if (!courseId) {
       return res.status(400).json({ message: "Missing courseId field" });
     }
 
-    const courseDetail = await Course.findOne({ courseId: payload.courseId });
+    const courseDetail = await Course.findOne({ courseId });
 
     if (!courseDetail) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    const imagePath = path.join(
-      __dirname,
-      "../coursesImg/",
-      courseDetail.image
-    );
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    if (courseDetail.image) {
+      await deleteFromS3(courseDetail.image);
     }
 
-    const deleteResult = await Course.deleteOne({
-      courseId: courseDetail.courseId,
-    });
+    const deleteResult = await Course.deleteOne({ courseId });
 
     await Category.updateOne(
       { categoryName: courseDetail.categoryName },
@@ -466,7 +460,6 @@ const handleToDeleteCourse = async (req, res) => {
         },
       }
     );
-
 
     if (deleteResult.deletedCount === 1) {
       return res.status(200).json({ message: "Course deleted successfully" });
