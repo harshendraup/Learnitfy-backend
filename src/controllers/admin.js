@@ -9,7 +9,7 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const AWS = require("aws-sdk");
-const deleteFromS3 = require('../middleware/multer-s3')
+const { deleteFromS3 } = require('../middleware/multer-s3');
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -144,56 +144,48 @@ const handleGetCategory = async (req, res) => {
 const handleToUpdateCategory = async (req, res) => {
   try {
     const { categoryId, ...restPayload } = req.body;
-    const logo = req.file; 
+    const logo = req.file;
 
     if (!categoryId) {
       return res.status(400).json({ message: "Category ID is required" });
     }
 
     const categoryDetail = await Category.findOne({ categoryId });
-
     if (!categoryDetail) {
       return res.status(404).json({ message: "Category not found" });
     }
+
     if (logo) {
       if (categoryDetail.logo) {
-        const oldKey = categoryDetail.logo;
-    
-        console.log("🧾 Deleting old S3 object with key:", oldKey, typeof oldKey); 
-    
-        await s3
-          .deleteObject({
-            Bucket: process.env.AWS_BUCKET_NAME || "prod-learnitfy-server-s3-01",
-            Key: String(oldKey), 
-          })
-          .promise()
-          .catch((err) =>
-            console.warn("S3 old logo delete warning (not fatal):", err.message)
-          );
+        const urlParts = categoryDetail.logo.split("/");
+        const oldKey = urlParts[urlParts.length - 1];
+        await deleteFromS3(oldKey);
       }
-    
-      restPayload.logo = logo.key; 
+
+      restPayload.logo =
+        logo.location || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${logo.key}`;
     }
 
-    const updated = await Category.findOneAndUpdate(
+    const updatedCategory = await Category.findOneAndUpdate(
       { categoryId },
       restPayload,
       { new: true }
     );
 
-    if (!updated) {
+    if (!updatedCategory) {
       return res.status(500).json({ message: "Failed to update category" });
     }
 
     return res.status(200).json({
       message: "Category updated successfully",
-      data: updated,
+      data: updatedCategory,
     });
   } catch (err) {
     console.error("Update Error:", err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
 
