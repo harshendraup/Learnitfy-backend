@@ -12,7 +12,14 @@ console.log('✅ Loaded PORT:', PORT);
 
 connectToDb();
 
-app.use(cors());
+const corsOptions = {
+  origin: '*', // Use specific origin in production
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
