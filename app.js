@@ -13,7 +13,7 @@ console.log('✅ Loaded PORT:', PORT);
 connectToDb();
 
 const corsOptions = {
-  origin: "https://learnitfy.com/", // Use specific origin in production
+  origin: "*", // Use specific origin in production
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 };
