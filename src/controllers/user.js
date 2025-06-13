@@ -104,11 +104,11 @@ const handleToSendBrochure = async (req, res) => {
     let pdfKey = courseDetail.pdf;
     if (pdfKey.startsWith("http")) {
       const urlObj = new URL(pdfKey);
-      pdfKey = urlObj.pathname.substring(1);
+      pdfKey = decodeURIComponent(urlObj.pathname.substring(1)); 
     }
 
     const s3Params = {
-      Bucket: process.env.AWS_BUCKET_NAME || "prod-learnitfy-server-s3-01",
+      Bucket: process.env.AWS_BUCKET_NAME,
       Key: pdfKey,
     };
 
@@ -141,7 +141,7 @@ Your Learning Team`;
         categoryName: courseDetail.categoryName,
         courseName: courseDetail.courseName,
         courseId: courseDetail.courseId,
-        date: new Date()
+        date: new Date(),
       });
 
       await newUser.save();
@@ -154,7 +154,7 @@ Your Learning Team`;
       return res.status(500).json({ message: "Failed to send email. Try again later." });
     }
   } catch (err) {
-    console.error("Email sending error:", err);
+    console.error("❌ Error sending brochure:", err);
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
