@@ -26,22 +26,31 @@ const handleAdminLogin = async (req, res) => {
       return res.status(400).json({ message: "Email, password, and role are required." });
     }
 
-    const existingAdmin = await Admin.findOne({ email });
+    const existingUser = await Admin.findOne({ email, role });
 
-    if (existingAdmin) {
-      return res.status(400).json({ message: "Admin user already exists" });
+    if (existingUser) {
+      const isMatch = await bcrypt.compare(password, existingUser.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Incorrect password" });
+      }
+
+      return res.status(200).json({
+        message: `${role.charAt(0).toUpperCase() + role.slice(1)} logged in successfully`,
+        data: existingUser,
+      });
     }
 
-    const adminUsersCount = await Admin.countDocuments();
-
-    if (adminUsersCount >= 2) {
-      return res.status(400).json({ message: "Only two active admin users are allowed" });
+    if (role === "admin") {
+      const adminUsersCount = await Admin.countDocuments({ role: "admin", status: "Active" });
+      if (adminUsersCount >= 2) {
+        return res.status(400).json({ message: "Only two active admin users are allowed" });
+      }
     }
 
-    const adminId = entityIdGenerator("AD");
+    const adminId = entityIdGenerator(role === "admin" ? "AD" : "US");
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const newAdmin = await Admin.create({
+    const newUser = await Admin.create({
       adminId,
       email,
       role,
@@ -52,8 +61,8 @@ const handleAdminLogin = async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "Admin created successfully",
-      data: newAdmin,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
+      data: newUser,
     });
 
   } catch (err) {
@@ -61,6 +70,8 @@ const handleAdminLogin = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+
 const handleToDeleteAdminUser=async (req, res) => {
   try {
     const { adminId } = req.body;
