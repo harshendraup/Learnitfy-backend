@@ -14,7 +14,8 @@ const {
   handleToDeleteCourse,
   handleToUpdateCourse,
   handleToAddContent,
-  handleToUploadPdfOfCourse
+  handleToUploadPdfOfCourse,
+  handleToDeleteAdminUser
 } = require("../controllers/admin");
 
 
@@ -25,6 +26,7 @@ router.post(
 );
 
 router.post("/login", handleAdminLogin);
+router.delete('/delete',handleToDeleteAdminUser)
 router.get("/get/category", handleGetCategory);
 
 router.patch(
