@@ -71,31 +71,20 @@ const handleAdminLogin = async (req, res) => {
   }
 };
 
-
-const handleToDeleteAdminUser=async (req, res) => {
+const handleToDeleteAllAdminUsers = async (req, res) => {
   try {
-    const { adminId } = req.body;
+    const result = await Admin.deleteMany({}); 
 
-    if (!adminId) {
-      return res.status(400).json({ message: "adminId is required" });
-    }
-
-    const admin = await Admin.findOne({ adminId });
-
-    if (!admin) {
-      return res.status(404).json({ message: "Admin user not found" });
-    }
-
-    await Admin.deleteOne({ adminId });
-
-    // Option 2: Soft Delete (mark as inactive instead)
-    // admin.status = "Inactive";
-    // await admin.save();
-
-    return res.status(200).json({ message: "Admin user deleted successfully" });
+    return res.status(200).json({
+      message: "All admin users deleted successfully",
+      deletedCount: result.deletedCount
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message
+    });
   }
 };
 
@@ -568,6 +557,6 @@ module.exports = {
   handleToDeleteCourse,
   handleToUpdateCourse,
   handleToAddContent,
-  handleToDeleteAdminUser,
+  handleToDeleteAllAdminUsers,
   handleToUploadPdfOfCourse
 };
