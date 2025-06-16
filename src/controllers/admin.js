@@ -22,24 +22,21 @@ const handleAdminLogin = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    const allowedEmail = "learn@gmail.com";
-    const allowedPassword = "learn@12345";
-    const allowedRole = "admin";
-
-    if (
-      email !== allowedEmail ||
-      password !== allowedPassword ||
-      role !== allowedRole
-    ) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: Invalid credentials or role." });
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: "Email, password, and role are required." });
     }
 
-    //   const existingAdmin = await Admin.findOne({ email, role });
-    //   if (existingAdmin) {
-    //     return res.status(409).json({ message: "Admin already registered with this email and role." });
-    //   }
+    const existingAdmin = await Admin.findOne({ email });
+
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin user already exists" });
+    }
+
+    const adminUsersCount = await Admin.countDocuments();
+
+    if (adminUsersCount >= 2) {
+      return res.status(400).json({ message: "Only two active admin users are allowed" });
+    }
 
     const adminId = entityIdGenerator("AD");
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -49,17 +46,19 @@ const handleAdminLogin = async (req, res) => {
       email,
       role,
       password: hashedPassword,
+      updateOn: new Date(),
+      createdOn: new Date(),
+      status: "Active"
     });
 
     return res.status(201).json({
-      message: "Admin logged in successfully",
+      message: "Admin created successfully",
       data: newAdmin,
     });
+
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
