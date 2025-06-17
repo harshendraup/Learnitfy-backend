@@ -54,7 +54,9 @@ const coursesSchema = new mongoose.Schema(
       },
       Activities: {
         type: Number,
-      },
+      }
+    },
+    notes:{
       notes1:{
         type:String,
       },
@@ -67,10 +69,7 @@ const coursesSchema = new mongoose.Schema(
       notes4:{
         type:String
       },
-      notes:{
-        type:String
-      }
-    },
+    }
   },
   {
     versionKey: false,

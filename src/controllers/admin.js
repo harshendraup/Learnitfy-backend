@@ -371,7 +371,6 @@ const handleToAddContent = async (req, res) => {
     });
   }
 };
-
 const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
   try {
     const payload = req.body;
@@ -386,18 +385,20 @@ const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    if (!courseDetail.moreAboutCourse) {
-      courseDetail.moreAboutCourse = {};
-    }
+    courseDetail.moreAboutCourse = {
+      ...courseDetail.moreAboutCourse,
+      duration: payload.moreAboutCourse?.duration || courseDetail.moreAboutCourse?.duration,
+      noOfModules: payload.moreAboutCourse?.noOfModules || courseDetail.moreAboutCourse?.noOfModules,
+      Activities: payload.moreAboutCourse?.Activities || courseDetail.moreAboutCourse?.Activities,
+    };
 
-    courseDetail.moreAboutCourse.duration = payload.moreAboutCourse.duration;
-    courseDetail.moreAboutCourse.noOfModules = payload.moreAboutCourse.noOfModules;
-    courseDetail.moreAboutCourse.Activities = payload.moreAboutCourse.Activities;
-    courseDetail.moreAboutCourse.notes1 = payload.moreAboutCourse.notes1;
-    courseDetail.moreAboutCourse.notes2 = payload.moreAboutCourse.notes2;
-    courseDetail.moreAboutCourse.notes3 = payload.moreAboutCourse.notes3;
-    courseDetail.moreAboutCourse.notes4 = payload.moreAboutCourse.notes4;
-    courseDetail.moreAboutCourse.notes = payload.moreAboutCourse.notes;
+    courseDetail.notes = {
+      ...courseDetail.notes,
+      notes1: payload.notes?.notes1 || courseDetail.notes?.notes1,
+      notes2: payload.notes?.notes2 || courseDetail.notes?.notes2,
+      notes3: payload.notes?.notes3 || courseDetail.notes?.notes3,
+      notes4: payload.notes?.notes4 || courseDetail.notes?.notes4,
+    };
 
     await courseDetail.save();
 
@@ -407,7 +408,7 @@ const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Update error:", err);
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
