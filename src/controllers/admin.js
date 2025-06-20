@@ -540,7 +540,7 @@ const handleToDeleteCourse = async (req, res) => {
 const handleToUpdateCourse = async (req, res) => {
   try {
     const { courseId, ...restPayload } = req.body;
-    const imageFile = req.file;
+    const image = req.file;
 
     if (!courseId) {
       return res.status(400).json({ message: "Course ID is required" });
@@ -552,19 +552,18 @@ const handleToUpdateCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    if (imageFile) {
-      const oldImagePath = path.join(
-        __dirname,
-        "../coursesImg/",
-        courseDetail.image
-      );
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    if (image) {
+      if (courseDetail.image) {
+        const urlParts = courseDetail.image.split("/");
+        const oldKey = urlParts[urlParts.length - 1];
+        await deleteFromS3(oldKey);
       }
-      restPayload.image = imageFile.filename;
+
+      restPayload.image =
+        image.location || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${image.key}`;
     }
 
-    restPayload.updateOn = new Date();
+    restPayload.updatedOn = new Date();
 
     const updatedCourse = await Course.findOneAndUpdate(
       { courseId },
@@ -588,6 +587,7 @@ const handleToUpdateCourse = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   handleAdminLogin,
