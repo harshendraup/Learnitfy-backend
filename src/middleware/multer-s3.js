@@ -65,13 +65,22 @@ const deleteFromS3 = async (fileKey) => {
   }
 };
 
+const excelFilter = (req, file, cb) => {
+  if (file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+    cb(null, true);
+  } else {
+    cb(new Error("Only Excel files (.xlsx) are allowed!"), false);
+  }
+};
+
 
 module.exports = {
   categoryLogo: s3Storage(imageVideoFilter),
   coursesImg: s3Storage(imageVideoFilter),
   coursePdf: s3Storage(pdfFilter),
   s3,
-  deleteFromS3
+  deleteFromS3,
+  excelUpload: s3Storage(excelFilter),
 };
 
 // prod-learnitfy-server-s3-01

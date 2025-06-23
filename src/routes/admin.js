@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { categoryLogo, coursesImg, coursePdf } = require("../middleware/multer-s3");
+const { categoryLogo, coursesImg, coursePdf ,excelUpload } = require("../middleware/multer-s3");
 
 
 const {
@@ -16,7 +16,10 @@ const {
   handleToAddContent,
   handleToUploadPdfOfCourse,
   handleToDeleteAllAdminUsers,
-  handleToAddAdditionalInformationAboutCourse
+  handleToAddAdditionalInformationAboutCourse,
+  uploadExcelFile,
+  deleteAllGstData,
+  handleToGetGstData
 } = require("../controllers/admin");
 
 
@@ -47,5 +50,11 @@ router.patch("/update/course", coursesImg.single("image"), handleToUpdateCourse)
 router.post("/add/content", handleToAddContent);
 router.post("/upload/pdf", coursePdf.single("pdf"), handleToUploadPdfOfCourse);
 
+
+
+// route for gst project::::;
+router.post("/upload-excel", excelUpload.single("file"), uploadExcelFile);
+router.get('/get/gstData',handleToGetGstData)
+router.delete('/gstdata/delete',deleteAllGstData )
 
 module.exports = router;

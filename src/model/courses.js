@@ -11,6 +11,9 @@ const coursesSchema = new mongoose.Schema(
     courseId: {
       type: String,
     },
+    categoryId:{
+      type:String
+    },
     price: {
       type: String,
     },

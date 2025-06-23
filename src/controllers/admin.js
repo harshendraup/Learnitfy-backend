@@ -9,7 +9,10 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const AWS = require("aws-sdk");
-const { deleteFromS3 } = require('../middleware/multer-s3');
+const { deleteFromS3,excelUpload} = require('../middleware/multer-s3');
+const XLSX = require("xlsx");
+const { gst } = require("../model/gst"); 
+const axios = require("axios");
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -42,7 +45,7 @@ const handleAdminLogin = async (req, res) => {
 
     if (role === "admin") {
       const adminUsersCount = await Admin.countDocuments({ role: "admin", status: "Active" });
-      if (adminUsersCount >= 2) {
+      if (adminUsersCount >= 10) {
         return res.status(400).json({ message: "Only two active admin users are allowed" });
       }
     }
@@ -229,17 +232,44 @@ const handleToDeleteCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
+    const relatedCourses = await Course.find({ categoryId });
+
+    for (const course of relatedCourses) {
+      if (course.image) {
+        try {
+          const fileKey = course.image.split("/").pop();
+          await deleteFromS3(fileKey);
+        } catch (err) {
+          console.warn(`Failed to delete image from S3: ${err.message}`);
+        }
+      }
+
+      if (course.pdf) {
+        try {
+          const fileKey = course.pdf.split("/").pop();
+          await deleteFromS3(fileKey);
+        } catch (err) {
+          console.warn(`Failed to delete PDF from S3: ${err.message}`);
+        }
+      }
+
+      await Course.deleteMany({ courseId: course.courseId });
+    }
+
     await Category.deleteOne({ categoryId });
 
-    return res.status(200).json({ message: "Category deleted successfully" });
+    return res.status(200).json({
+      message: "Category and all associated courses deleted successfully",
+    });
+
   } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    console.error("Delete Category Error:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
-
 const handleToAddCourses = async (req, res) => {
   try {
     const payload = req.body;
@@ -589,6 +619,108 @@ const handleToUpdateCourse = async (req, res) => {
 };
 
 
+// controller work for gst  project:::
+const uploadExcelFile = async (req, res) => {
+  try {
+    const fileUrl = req.file.location;
+
+    const response = await axios.get(fileUrl, {
+      responseType: "arraybuffer",
+    });
+
+    const workbook = XLSX.read(response.data, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const insertedDocs = [];
+
+    for (const row of data) {
+      const newGst = new gst({
+        excelFile: fileUrl,
+        SourceName: row["Source Name"],
+        SupplierGSTIN: row["Supplier GSTIN"],
+        SupplierLegalName: row["Supplier Legal Name"],
+        SupplierTradeName: row["Supplier TradeN ame"],
+        invoiceDate: row["Invoice Date"],
+        booksDate: row["Books Date"],
+        invoiceNumber: row["invoice Number"],
+        TotalTaxableValue: Number(row["Total Taxable Value"]) || 0,
+        TotalTaxValue: Number(row["Total Tax Value"]) || 0,
+        TotalIGSTAmount: Number(row["Total IGST Amount"]) || 0,
+        TotalCGSTAmount: Number(row["Total CGST Amount"]) || 0,
+        TotalSGSTAmount: Number(row["Total SGST Amount"]) || 0,
+        TotalInvoiceValue: row["Total Invoice Value"],
+        GSTR2ABooksSource: row["GSTR-2A/Books Source"],
+        section: row["Section"],
+        ReturnFiled: row["Return Filed"],
+        FilingYear: row["Filing Year"],
+        FilingMonth: row["Filing Month"],
+        FilingDate: row["Filing Date"],
+        GSTR3BReturnStatus: row["GSTR-3B Return Status"] === "true" || row["GSTR3BReturnStatus"] === true,
+        EffCancellationDate: row["Eff. Cancellation Date"]
+      });
+
+      const savedDoc = await newGst.save();
+      insertedDocs.push(savedDoc);
+    }
+
+    return res.status(200).json({
+      message: "Excel data uploaded and saved successfully",
+      data: insertedDocs
+    });
+
+  } catch (err) {
+    console.error("Excel Upload Error:", err.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message
+    });
+  }
+};
+
+const handleToGetGstData= async(req,res)=>{
+  try{
+    const gstData= await gst.find({});
+    if(gstData.length>1){
+      return res.status(200).json({
+        message: "Excel data fetched successfully",
+        data: gstData
+      });
+    }
+    else{
+      return res.status(200).json({
+        message: "Excel data fetched successfully",
+        data: {}
+      });
+    }
+
+  }
+  catch (err) {
+    console.error("Excel Upload Error:", err.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message
+    });
+  }
+}
+
+const deleteAllGstData = async (req, res) => {
+  try {
+    const result = await gst.deleteMany({});
+    return res.status(200).json({
+      message: "All GST records deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("Error deleting GST data:", err.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   handleAdminLogin,
   handleAddCategory,
@@ -602,5 +734,8 @@ module.exports = {
   handleToAddContent,
   handleToDeleteAllAdminUsers,
   handleToUploadPdfOfCourse,
-  handleToAddAdditionalInformationAboutCourse
+  handleToAddAdditionalInformationAboutCourse,
+  uploadExcelFile,
+  deleteAllGstData,
+  handleToGetGstData
 };
