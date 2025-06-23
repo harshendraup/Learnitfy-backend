@@ -83,6 +83,22 @@ const getAllContacts = async (req, res) => {
   }
 };
 
+const deleteAllContacts = async (req, res) => {
+  try {
+    const result = await Contact.deleteMany({});
+    return res.status(200).json({
+      message: "All contact inquiries deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("Error deleting contact inquiries:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 const handleToSendBrochure = async (req, res) => {
   try {
     const { email, courseId } = req.body;
@@ -182,6 +198,8 @@ const getAllBrochureRequests = async (req, res) => {
   }
 };
 
+
+
 const handleToEnrollForCourse = async (req, res) => {
   try {
     const payload = req.body;
@@ -264,11 +282,31 @@ const handleToGetEnrolledUser = async (req, res) => {
   }
 };
 
+const deleteAllEnquiries = async (req, res) => {
+  try {
+    const result = await Enroll.deleteMany({});
+    return res.status(200).json({
+      message: "All contact inquiries deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("Error deleting contact inquiries:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+
+
 module.exports = {
   handleToContact,
   getAllContacts,
   handleToSendBrochure,
   getAllBrochureRequests,
   handleToGetEnrolledUser,
-  handleToEnrollForCourse
+  handleToEnrollForCourse,
+  deleteAllContacts,
+  deleteAllEnquiries
 };

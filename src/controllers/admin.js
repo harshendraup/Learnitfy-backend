@@ -156,7 +156,7 @@ const handleGetCategory = async (req, res) => {
     const categories = await Category.find(query);
 
     if (categories.length === 0) {
-      return res.status(404).json({ message: "No category found" });
+      return res.status(200).json([]);
     }
 
     return res
@@ -643,7 +643,7 @@ const uploadExcelFile = async (req, res) => {
         SupplierTradeName: row["Supplier TradeN ame"],
         invoiceDate: row["Invoice Date"],
         booksDate: row["Books Date"],
-        invoiceNumber: row["invoice Number"],
+        invoiceNumber: row["Invoice Number"],
         TotalTaxableValue: Number(row["Total Taxable Value"]) || 0,
         TotalTaxValue: Number(row["Total Tax Value"]) || 0,
         TotalIGSTAmount: Number(row["Total IGST Amount"]) || 0,
@@ -656,7 +656,7 @@ const uploadExcelFile = async (req, res) => {
         FilingYear: row["Filing Year"],
         FilingMonth: row["Filing Month"],
         FilingDate: row["Filing Date"],
-        GSTR3BReturnStatus: row["GSTR-3B Return Status"] === "true" || row["GSTR3BReturnStatus"] === true,
+        GSTR3BReturnStatus: row["GSTR-3B Return Status"] === "true" || row["GSTR-3B Return Status"] === true,
         EffCancellationDate: row["Eff. Cancellation Date"]
       });
 
