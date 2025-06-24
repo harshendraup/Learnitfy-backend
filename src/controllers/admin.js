@@ -619,7 +619,25 @@ const handleToUpdateCourse = async (req, res) => {
 };
 
 
-// controller work for gst  project:::
+function parseExcelDate(excelDate) {
+  if (typeof excelDate === 'number') {
+    const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+    return jsDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  } else if (typeof excelDate === 'string' && !isNaN(Date.parse(excelDate))) {
+    const jsDate = new Date(excelDate);
+    return jsDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  }
+  return null;
+}
+
 const uploadExcelFile = async (req, res) => {
   try {
     const fileUrl = req.file.location;
@@ -641,8 +659,8 @@ const uploadExcelFile = async (req, res) => {
         SupplierGSTIN: row["Supplier GSTIN"],
         SupplierLegalName: row["Supplier Legal Name"],
         SupplierTradeName: row["Supplier TradeN ame"],
-        invoiceDate: row["Invoice Date"],
-        booksDate: row["Books Date"],
+        invoiceDate: parseExcelDate(row["Invoice Date"]),
+        booksDate: parseExcelDate(row["Books Date"]),
         invoiceNumber: row["Invoice Number"],
         TotalTaxableValue: Number(row["Total Taxable Value"]) || 0,
         TotalTaxValue: Number(row["Total Tax Value"]) || 0,
@@ -655,9 +673,9 @@ const uploadExcelFile = async (req, res) => {
         ReturnFiled: row["Return Filed"],
         FilingYear: row["Filing Year"],
         FilingMonth: row["Filing Month"],
-        FilingDate: row["Filing Date"],
+        FilingDate: parseExcelDate(row["Filing Date"]),
         GSTR3BReturnStatus: row["GSTR-3B Return Status"] === "true" || row["GSTR-3B Return Status"] === true,
-        EffCancellationDate: row["Eff. Cancellation Date"]
+        EffCancellationDate: parseExcelDate(row["Eff. Cancellation Date"])
       });
 
       const savedDoc = await newGst.save();
