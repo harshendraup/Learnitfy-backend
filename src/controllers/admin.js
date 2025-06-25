@@ -340,6 +340,46 @@ const handleToAddCourses = async (req, res) => {
   }
 };
 
+const handleToAddCourseDetails = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    if (!payload.courseId || !payload.courseDetail) {
+      return res.status(400).json({
+        message: "Invalid payload data/fields",
+      });
+    }
+
+    const course = await Course.findOne({ courseId: payload.courseId });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const updateCourse = await Course.updateOne(
+      { courseId: payload.courseId },
+      {
+        $set: {
+          courseDetail: payload.courseDetail,
+          updateOn: new Date(),
+        },
+      }
+    );
+
+    return res.status(200).json({
+      message: "Course detail updated successfully",
+      data: updateCourse,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 
 const handleToAddContent = async (req, res) => {
   try {
@@ -356,13 +396,15 @@ const handleToAddContent = async (req, res) => {
       });
     }
 
-    const isValidContent = courseContent.every(
-      (item) => item.moduleTitle && item.description
+    const isValidContent = courseContent.every((item) =>
+      item.moduleTitle &&
+      (item.point1 || item.point2 || item.point3 || item.point4 || item.point5 || item.point6)
     );
+
     if (!isValidContent) {
       return res.status(400).json({
         message:
-          "Each courseContent item must have moduleTitle and description",
+          "Each courseContent item must have moduleTitle and at least one of point1 to point6",
       });
     }
 
@@ -371,28 +413,24 @@ const handleToAddContent = async (req, res) => {
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
-    if (course) {
-      const addContent = await Course.updateOne(
-        { courseId },
-        {
-          $push: {
-            courseContent: { $each: courseContent },
-          },
-          $set: {
-            updateOn: new Date(),
-          },
-        }
-      );
 
-      return res.status(200).json({
-        message: "Course content added successfully",
-        data: addContent,
-      });
-    } else {
-      return res.status(200).json({
-        message: {},
-      });
-    }
+    const addContent = await Course.updateOne(
+      { courseId },
+      {
+        $push: {
+          courseContent: { $each: courseContent },
+        },
+        $set: {
+          updateOn: new Date(),
+        },
+      }
+    );
+
+    return res.status(200).json({
+      message: "Course content added successfully",
+      data: addContent,
+    });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -401,6 +439,7 @@ const handleToAddContent = async (req, res) => {
     });
   }
 };
+
 const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
   try {
     const payload = req.body;
@@ -755,5 +794,6 @@ module.exports = {
   handleToAddAdditionalInformationAboutCourse,
   uploadExcelFile,
   deleteAllGstData,
-  handleToGetGstData
+  handleToGetGstData,
+  handleToAddCourseDetails
 };
