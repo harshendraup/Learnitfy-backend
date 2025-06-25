@@ -608,22 +608,28 @@ const handleToDeleteCourse = async (req, res) => {
 
 const handleToUpdateCourse = async (req, res) => {
   try {
-    const { courseId, ...restPayload } = req.body;
+    const {
+      courseId,
+      moreAboutCourse,
+      courseDetail,
+      notes,
+      ...restPayload
+    } = req.body;
     const image = req.file;
 
     if (!courseId) {
       return res.status(400).json({ message: "Course ID is required" });
     }
 
-    const courseDetail = await Course.findOne({ courseId });
+    const courseDetailData = await Course.findOne({ courseId });
 
-    if (!courseDetail) {
+    if (!courseDetailData) {
       return res.status(404).json({ message: "Course not found" });
     }
 
     if (image) {
-      if (courseDetail.image) {
-        const urlParts = courseDetail.image.split("/");
+      if (courseDetailData.image) {
+        const urlParts = courseDetailData.image.split("/");
         const oldKey = urlParts[urlParts.length - 1];
         await deleteFromS3(oldKey);
       }
@@ -632,17 +638,34 @@ const handleToUpdateCourse = async (req, res) => {
         image.location || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${image.key}`;
     }
 
-    restPayload.updatedOn = new Date();
+    const updatePayload = {
+      ...restPayload,
+      updateOn: new Date(),
+    };
+
+    if (moreAboutCourse && typeof moreAboutCourse === 'object') {
+      for (const key in moreAboutCourse) {
+        updatePayload[`moreAboutCourse.${key}`] = moreAboutCourse[key];
+      }
+    }
+
+    if (courseDetail && typeof courseDetail === 'object') {
+      for (const key in courseDetail) {
+        updatePayload[`courseDetail.${key}`] = courseDetail[key];
+      }
+    }
+
+    if (notes && typeof notes === 'object') {
+      for (const key in notes) {
+        updatePayload[`notes.${key}`] = notes[key];
+      }
+    }
 
     const updatedCourse = await Course.findOneAndUpdate(
       { courseId },
-      restPayload,
+      { $set: updatePayload },
       { new: true }
     );
-
-    if (!updatedCourse) {
-      return res.status(500).json({ message: "Failed to update course" });
-    }
 
     return res.status(200).json({
       message: "Course updated successfully",
