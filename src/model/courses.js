@@ -21,21 +21,77 @@ const coursesSchema = new mongoose.Schema(
       type: String,
     },
     courseDetail: {
-      heading: { type: String },
-      aboutCourse: { type: String },
-      subHeading: { type: String },
-      point1: { type: String },
+      heading: {
+        type: String,
+      },
+      aboutCourse: {
+        type: String,
+      },
+      subHeading: {
+        type: String,
+      },
+      point1: {
+        type: String,
+      },
       point2: { type: String },
-      point3: { type: String },
-      point4: { type: String },
-      point5: { type: String },
-      point6: { type: String },
-      point7: { type: String },
-      point8: { type: String },
-      point9: { type: String },
-      point10: { type: String },
-      point11: { type: String },
-      point12: { type: String },
+      point3: {
+        type: String,
+      },
+      point4: {
+        type: String,
+      },
+      point5: {
+        type: String,
+      },
+      point6: {
+        type: String,
+      },
+      point7: {
+        type: String,
+      },
+      point8: {
+        type: String,
+      },
+      point9: {
+        type: String,
+      },
+      point10: {
+        type: String,
+      },
+      point11: {
+        type: String,
+      },
+      point12: {
+        type: String,
+      },
+      whoShouldEnroll: {
+        point1: {
+          type: String,
+        },
+        point2: {
+          type: String,
+        },
+        point3: {
+          type: String,
+        },
+        point4: {
+          type: String,
+        },
+      },
+      Prerequisites: {
+        point1: {
+          type: String,
+        },
+        point2: {
+          type: String,
+        },
+        point3: {
+          type: String,
+        },
+        point4: {
+          type: String,
+        },
+      },
     },
     courseContent: [
       {
