@@ -9,16 +9,15 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const AWS = require("aws-sdk");
-const { deleteFromS3,excelUpload} = require('../middleware/multer-s3');
+const { deleteFromS3, excelUpload } = require("../middleware/multer-s3");
 const XLSX = require("xlsx");
-const { gst } = require("../model/gst"); 
+const { gst } = require("../model/gst");
 const axios = require("axios");
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey:
-    process.env.AWS_SECRET_ACCESS_KEY 
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
 const handleAdminLogin = async (req, res) => {
@@ -26,7 +25,9 @@ const handleAdminLogin = async (req, res) => {
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
-      return res.status(400).json({ message: "Email, password, and role are required." });
+      return res
+        .status(400)
+        .json({ message: "Email, password, and role are required." });
     }
 
     const existingUser = await Admin.findOne({ email, role });
@@ -38,15 +39,22 @@ const handleAdminLogin = async (req, res) => {
       }
 
       return res.status(200).json({
-        message: `${role.charAt(0).toUpperCase() + role.slice(1)} logged in successfully`,
+        message: `${
+          role.charAt(0).toUpperCase() + role.slice(1)
+        } logged in successfully`,
         data: existingUser,
       });
     }
 
     if (role === "admin") {
-      const adminUsersCount = await Admin.countDocuments({ role: "admin", status: "Active" });
+      const adminUsersCount = await Admin.countDocuments({
+        role: "admin",
+        status: "Active",
+      });
       if (adminUsersCount >= 10) {
-        return res.status(400).json({ message: "Only two active admin users are allowed" });
+        return res
+          .status(400)
+          .json({ message: "Only two active admin users are allowed" });
       }
     }
 
@@ -60,37 +68,39 @@ const handleAdminLogin = async (req, res) => {
       password: hashedPassword,
       updateOn: new Date(),
       createdOn: new Date(),
-      status: "Active"
+      status: "Active",
     });
 
     return res.status(201).json({
-      message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
+      message: `${
+        role.charAt(0).toUpperCase() + role.slice(1)
+      } registered successfully`,
       data: newUser,
     });
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
 
 const handleToDeleteAllAdminUsers = async (req, res) => {
   try {
-    const result = await Admin.deleteMany({}); 
+    const result = await Admin.deleteMany({});
 
     return res.status(200).json({
       message: "All admin users deleted successfully",
-      deletedCount: result.deletedCount
+      deletedCount: result.deletedCount,
     });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
       message: "Internal server error",
-      error: err.message
+      error: err.message,
     });
   }
 };
-
 
 const handleAddCategory = async (req, res, next) => {
   try {
@@ -137,9 +147,6 @@ const handleAddCategory = async (req, res, next) => {
     return next(error);
   }
 };
-
-
-
 
 const handleGetCategory = async (req, res) => {
   try {
@@ -192,7 +199,8 @@ const handleToUpdateCategory = async (req, res) => {
       }
 
       restPayload.logo =
-        logo.location || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${logo.key}`;
+        logo.location ||
+        `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${logo.key}`;
     }
 
     const updatedCategory = await Category.findOneAndUpdate(
@@ -261,7 +269,6 @@ const handleToDeleteCategory = async (req, res) => {
     return res.status(200).json({
       message: "Category and all associated courses deleted successfully",
     });
-
   } catch (err) {
     console.error("Delete Category Error:", err);
     return res.status(500).json({
@@ -274,12 +281,7 @@ const handleToAddCourses = async (req, res) => {
   try {
     const payload = req.body;
 
-    if (
-      !payload.categoryName ||
-      !payload.courseName ||
-      !payload.description ||
-      !payload.price
-    ) {
+    if (!payload.categoryName || !payload.courseName || !payload.description) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -310,12 +312,12 @@ const handleToAddCourses = async (req, res) => {
       price: Number(payload.price) || 0,
       description: payload.description,
       duration: payload.duration || "",
-      image: req.file?.location || "", 
+      image: req.file?.location || "",
       courseId,
       status: "Active",
-      url:payload.url,
-      metaTag:payload.metaTag,
-      metaDescription:payload.metaDescription
+      url: payload.url,
+      metaTag: payload.metaTag,
+      metaDescription: payload.metaDescription,
     });
 
     const addedCourse = await newCourse.save();
@@ -373,7 +375,6 @@ const handleToAddCourseDetails = async (req, res) => {
       message: "Course detail updated successfully",
       data: updateCourse,
     });
-
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -382,7 +383,6 @@ const handleToAddCourseDetails = async (req, res) => {
     });
   }
 };
-
 
 const handleToAddContent = async (req, res) => {
   try {
@@ -399,9 +399,15 @@ const handleToAddContent = async (req, res) => {
       });
     }
 
-    const isValidContent = courseContent.every((item) =>
-      item.moduleTitle &&
-      (item.point1 || item.point2 || item.point3 || item.point4 || item.point5 || item.point6)
+    const isValidContent = courseContent.every(
+      (item) =>
+        item.moduleTitle &&
+        (item.point1 ||
+          item.point2 ||
+          item.point3 ||
+          item.point4 ||
+          item.point5 ||
+          item.point6)
     );
 
     if (!isValidContent) {
@@ -433,7 +439,6 @@ const handleToAddContent = async (req, res) => {
       message: "Course content added successfully",
       data: addContent,
     });
-
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -459,9 +464,15 @@ const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
 
     courseDetail.moreAboutCourse = {
       ...courseDetail.moreAboutCourse,
-      duration: payload.moreAboutCourse?.duration || courseDetail.moreAboutCourse?.duration,
-      noOfModules: payload.moreAboutCourse?.noOfModules || courseDetail.moreAboutCourse?.noOfModules,
-      Activities: payload.moreAboutCourse?.Activities || courseDetail.moreAboutCourse?.Activities,
+      duration:
+        payload.moreAboutCourse?.duration ||
+        courseDetail.moreAboutCourse?.duration,
+      noOfModules:
+        payload.moreAboutCourse?.noOfModules ||
+        courseDetail.moreAboutCourse?.noOfModules,
+      Activities:
+        payload.moreAboutCourse?.Activities ||
+        courseDetail.moreAboutCourse?.Activities,
     };
 
     courseDetail.notes = {
@@ -478,7 +489,6 @@ const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
       message: "Additional course information updated successfully",
       data: courseDetail,
     });
-
   } catch (err) {
     console.error("Update error:", err);
     return res.status(500).json({
@@ -519,7 +529,7 @@ const handleToUploadPdfOfCourse = async (req, res) => {
     return res.status(200).json({
       message: "PDF uploaded and linked to course successfully",
       data: {
-        file: req.file.location, 
+        file: req.file.location,
         updatedCourse: updatedCourse,
       },
     });
@@ -534,7 +544,7 @@ const handleToUploadPdfOfCourse = async (req, res) => {
 
 const handleToGetCourses = async (req, res) => {
   try {
-    const { courseName, courseId ,categoryName} = req.query;
+    const { courseName, courseId, categoryName } = req.query;
 
     let query = {};
 
@@ -544,8 +554,8 @@ const handleToGetCourses = async (req, res) => {
     if (courseId) {
       query.courseId = courseId;
     }
-    if(categoryName){
-      query.categoryName=categoryName
+    if (categoryName) {
+      query.categoryName = categoryName;
     }
 
     const coursesList = await Course.find(query);
@@ -569,55 +579,52 @@ const handleToGetCourses = async (req, res) => {
 
 const handleToDeleteCourse = async (req, res) => {
   try {
-      const { courseId } = req.body;
+    const { courseId } = req.body;
 
-      if (!courseId) {
-          return res.status(400).json({ message: "Missing courseId" });
+    if (!courseId) {
+      return res.status(400).json({ message: "Missing courseId" });
+    }
+
+    const course = await Course.findOne({ courseId });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const associatedCourses = await Course.find({ courseId });
+
+    for (let course of associatedCourses) {
+      if (course.image) {
+        try {
+          const fileKey = course.image.split("/").pop();
+          await deleteFromS3(fileKey);
+        } catch (err) {
+          console.warn(
+            `Failed to delete image ${course.image}: ${err.message}`
+          );
+        }
       }
+    }
 
-      const course = await Course.findOne({ courseId }); 
+    const deleteResult = await Course.deleteOne({ courseId });
 
-      if (!course) {
-          return res.status(404).json({ message: "Course not found" });
-      }
-
-  
-      const associatedCourses = await Course.find({ courseId }); 
-
-      for (let course of associatedCourses) {
-          if (course.image) {
-              try {
-                  const fileKey = course.image.split('/').pop();
-                  await deleteFromS3(fileKey);
-              } catch (err) {
-                    console.warn(`Failed to delete image ${course.image}: ${err.message}`);
-              }
-          }
-      }
-
-      const deleteResult = await Course.deleteOne({ courseId }); 
-
-      if (deleteResult.deletedCount === 1) {
-          return res.status(200).json({ message: "Course deleted successfully" });
-      } else {
-          return res.status(500).json({ message: "Failed to delete course" });
-      }
-
+    if (deleteResult.deletedCount === 1) {
+      return res.status(200).json({ message: "Course deleted successfully" });
+    } else {
+      return res.status(500).json({ message: "Failed to delete course" });
+    }
   } catch (err) {
-      console.error("Delete Course Error:", err);
-      return res.status(500).json({ message: "Internal server error", error: err.message });
+    console.error("Delete Course Error:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
 
 const handleToUpdateCourse = async (req, res) => {
   try {
-    const {
-      courseId,
-      moreAboutCourse,
-      courseDetail,
-      notes,
-      ...restPayload
-    } = req.body;
+    const { courseId, moreAboutCourse, courseDetail, notes, ...restPayload } =
+      req.body;
     const image = req.file;
 
     if (!courseId) {
@@ -638,7 +645,8 @@ const handleToUpdateCourse = async (req, res) => {
       }
 
       restPayload.image =
-        image.location || `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${image.key}`;
+        image.location ||
+        `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${image.key}`;
     }
 
     const updatePayload = {
@@ -646,19 +654,19 @@ const handleToUpdateCourse = async (req, res) => {
       updateOn: new Date(),
     };
 
-    if (moreAboutCourse && typeof moreAboutCourse === 'object') {
+    if (moreAboutCourse && typeof moreAboutCourse === "object") {
       for (const key in moreAboutCourse) {
         updatePayload[`moreAboutCourse.${key}`] = moreAboutCourse[key];
       }
     }
 
-    if (courseDetail && typeof courseDetail === 'object') {
+    if (courseDetail && typeof courseDetail === "object") {
       for (const key in courseDetail) {
         updatePayload[`courseDetail.${key}`] = courseDetail[key];
       }
     }
 
-    if (notes && typeof notes === 'object') {
+    if (notes && typeof notes === "object") {
       for (const key in notes) {
         updatePayload[`notes.${key}`] = notes[key];
       }
@@ -683,21 +691,20 @@ const handleToUpdateCourse = async (req, res) => {
   }
 };
 
-
 function parseExcelDate(excelDate) {
-  if (typeof excelDate === 'number') {
+  if (typeof excelDate === "number") {
     const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
     return jsDate.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
-      year: "numeric"
+      year: "numeric",
     });
-  } else if (typeof excelDate === 'string' && !isNaN(Date.parse(excelDate))) {
+  } else if (typeof excelDate === "string" && !isNaN(Date.parse(excelDate))) {
     const jsDate = new Date(excelDate);
     return jsDate.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
-      year: "numeric"
+      year: "numeric",
     });
   }
   return null;
@@ -739,8 +746,10 @@ const uploadExcelFile = async (req, res) => {
         FilingYear: row["Filing Year"],
         FilingMonth: row["Filing Month"],
         FilingDate: parseExcelDate(row["Filing Date"]),
-        GSTR3BReturnStatus: row["GSTR-3B Return Status"] === "true" || row["GSTR-3B Return Status"] === true,
-        EffCancellationDate: parseExcelDate(row["Eff. Cancellation Date"])
+        GSTR3BReturnStatus:
+          row["GSTR-3B Return Status"] === "true" ||
+          row["GSTR-3B Return Status"] === true,
+        EffCancellationDate: parseExcelDate(row["Eff. Cancellation Date"]),
       });
 
       const savedDoc = await newGst.save();
@@ -749,43 +758,39 @@ const uploadExcelFile = async (req, res) => {
 
     return res.status(200).json({
       message: "Excel data uploaded and saved successfully",
-      data: insertedDocs
+      data: insertedDocs,
     });
-
   } catch (err) {
     console.error("Excel Upload Error:", err.message);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-const handleToGetGstData= async(req,res)=>{
-  try{
-    const gstData= await gst.find({});
-    if(gstData.length>1){
+const handleToGetGstData = async (req, res) => {
+  try {
+    const gstData = await gst.find({});
+    if (gstData.length > 1) {
       return res.status(200).json({
         message: "Excel data fetched successfully",
-        data: gstData
+        data: gstData,
       });
-    }
-    else{
+    } else {
       return res.status(200).json({
         message: "Excel data fetched successfully",
-        data: {}
+        data: {},
       });
     }
-
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Excel Upload Error:", err.message);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: err.message
+      error: err.message,
     });
   }
-}
+};
 
 const deleteAllGstData = async (req, res) => {
   try {
@@ -802,7 +807,6 @@ const deleteAllGstData = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   handleAdminLogin,
@@ -821,5 +825,5 @@ module.exports = {
   uploadExcelFile,
   deleteAllGstData,
   handleToGetGstData,
-  handleToAddCourseDetails
+  handleToAddCourseDetails,
 };
