@@ -151,6 +151,16 @@ const coursesSchema = new mongoose.Schema(
         type: String,
       },
     },
+    url:{
+      type:String
+    },
+    metaTag:{
+      type:String
+    },
+    metaDescription:{
+      type:String
+    }
+
   },
   {
     versionKey: false,

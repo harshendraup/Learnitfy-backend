@@ -4,12 +4,14 @@ const router = express.Router();
 const {
     handleToAddFaq,
     handleToGetFaq,
-    handleToDeleteFaq
+    handleToDeleteFaq,
+    handleToUpdateFaq
 }= require('../controllers/faq');
 
 router.post('/add',handleToAddFaq);
 router.get('/get',handleToGetFaq);
 router.delete('/delete',handleToDeleteFaq)
+router.patch('/update',handleToUpdateFaq)
 
 
 

@@ -89,6 +89,48 @@ const handleToAddFaq = async (req, res) => {
       }
   }
 
+
+const handleToUpdateFaq = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    const { courseId, _id, question, answer } = payload;
+
+    if (!courseId || !_id) {
+      return res.status(400).json({ message: "courseId and _id are required." });
+    }
+
+    const faqDoc = await FAQ.findOne({ courseId });
+
+    if (!faqDoc) {
+      return res.status(404).json({ message: "Course FAQ not found." });
+    }
+
+    const index = faqDoc.faq.findIndex(f => f._id.toString() === _id);
+
+    if (index === -1) {
+      return res.status(404).json({ message: "FAQ item not found." });
+    }
+
+    if (question !== undefined) {
+      faqDoc.faq[index].question = question;
+    }
+
+    if (answer !== undefined) {
+      faqDoc.faq[index].answer = answer;
+    }
+
+    faqDoc.updatedOn = new Date();
+
+    await faqDoc.save();
+
+    return res.status(200).json({ message: "FAQ item updated successfully.", data: faqDoc });
+  } catch (error) {
+    console.error("Error updating FAQ:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
   const handleToDeleteFaq = async (req, res) => {
     try {
       const payload = req.body;
@@ -125,5 +167,6 @@ const handleToAddFaq = async (req, res) => {
 module.exports={
     handleToAddFaq,
     handleToGetFaq,
-    handleToDeleteFaq
+    handleToDeleteFaq,
+    handleToUpdateFaq
 }

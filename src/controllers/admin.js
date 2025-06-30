@@ -313,6 +313,9 @@ const handleToAddCourses = async (req, res) => {
       image: req.file?.location || "", 
       courseId,
       status: "Active",
+      url:payload.url,
+      metaTag:payload.metaTag,
+      metaDescription:payload.metaDescription
     });
 
     const addedCourse = await newCourse.save();
