@@ -825,7 +825,7 @@ const DeleteEntireDataOfDB = async (req, res) => {
     // if (
     //   !deleteCategories ||
     //   !deleteContactInquires ||
-    //   deleteCourses ||
+    //   !deleteCourses ||
     //   !deleteEnrollData ||
     //   !deleteFaqs ||
     //   !deleteUsers ||
