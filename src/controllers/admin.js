@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const { entityIdGenerator } = require("../utils/entityGenerator");
 const Admin = require("../model/admin");
 const Course = require("../model/courses");
+const { Contact } = require("../model/contactForm");
 const sendEmail = require("../utils/email");
 const nodemailer = require("nodemailer");
 const path = require("path");
@@ -13,6 +14,9 @@ const { deleteFromS3, excelUpload } = require("../middleware/multer-s3");
 const XLSX = require("xlsx");
 const { gst } = require("../model/gst");
 const axios = require("axios");
+const { User } = require("../model/user");
+const { Enroll } = require("../model/enroll");
+const FAQ = require("../model/faq");
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -807,6 +811,39 @@ const deleteAllGstData = async (req, res) => {
     });
   }
 };
+const DeleteEntireDataOfDB = async (req, res) => {
+  try {
+    const deleteCategories = await Category.deleteMany({});
+    const deleteCourses = await Course.deleteMany({});
+    const deleteContactInquires = await Contact.deleteMany({});
+    const deleteUsers = await User.deleteMany({});
+    const deleteFaqs = await FAQ.deleteMany({});
+    const deleteEnrollData = await Enroll.deleteMany({});
+
+    const deleteAdminUsers = await Admin.deleteMany({});
+
+    // if (
+    //   !deleteCategories ||
+    //   !deleteContactInquires ||
+    //   deleteCourses ||
+    //   !deleteEnrollData ||
+    //   !deleteFaqs ||
+    //   !deleteUsers ||
+    //   !deleteAdminUsers
+    // ) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "not able to delete the complete data" });
+    // }
+
+    return res.status(200).json({ message: "Data deleted Successfully" });
+  } catch (err) {
+    console.error("Error in deleting the data of db", err.message);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: err.message });
+  }
+};
 
 module.exports = {
   handleAdminLogin,
@@ -826,4 +863,5 @@ module.exports = {
   deleteAllGstData,
   handleToGetGstData,
   handleToAddCourseDetails,
+  DeleteEntireDataOfDB,
 };

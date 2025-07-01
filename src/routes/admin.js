@@ -20,7 +20,8 @@ const {
   uploadExcelFile,
   deleteAllGstData,
   handleToGetGstData,
-  handleToAddCourseDetails
+  handleToAddCourseDetails,
+  DeleteEntireDataOfDB
 } = require("../controllers/admin");
 
 
@@ -58,5 +59,6 @@ router.post("/upload/pdf", coursePdf.single("pdf"), handleToUploadPdfOfCourse);
 router.post("/upload-excel", excelUpload.single("file"), uploadExcelFile);
 router.get('/get/gstData',handleToGetGstData)
 router.delete('/gstdata/delete',deleteAllGstData )
+router.delete('/delete/dbData',DeleteEntireDataOfDB)
 
 module.exports = router;
