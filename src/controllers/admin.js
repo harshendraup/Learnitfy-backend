@@ -388,41 +388,32 @@ const handleToAddCourseDetails = async (req, res) => {
   }
 };
 
+
 const handleToAddContent = async (req, res) => {
   try {
     const { courseId, courseContent } = req.body;
 
-    if (
-      !courseId ||
-      !Array.isArray(courseContent) ||
-      courseContent.length === 0
-    ) {
+    if (!courseId || !Array.isArray(courseContent) || courseContent.length === 0) {
       return res.status(400).json({
-        message:
-          "courseId and courseContent array are required with at least one item",
+        message: "courseId and courseContent array are required with at least one item",
       });
     }
 
     const isValidContent = courseContent.every(
       (item) =>
         item.moduleTitle &&
-        (item.point1 ||
-          item.point2 ||
-          item.point3 ||
-          item.point4 ||
-          item.point5 ||
-          item.point6)
+        Array.isArray(item.points) &&
+        item.points.length > 0 &&
+        item.points.every((pt) => typeof pt === "string" && pt.trim() !== "")
     );
 
     if (!isValidContent) {
       return res.status(400).json({
-        message:
-          "Each courseContent item must have moduleTitle and at least one of point1 to point6",
+        message: "Each courseContent item must have moduleTitle and non-empty array of points",
       });
     }
 
     const course = await Course.findOne({ courseId });
-
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
@@ -451,6 +442,7 @@ const handleToAddContent = async (req, res) => {
     });
   }
 };
+
 
 const handleToAddAdditionalInformationAboutCourse = async (req, res) => {
   try {

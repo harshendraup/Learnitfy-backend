@@ -95,13 +95,12 @@ const coursesSchema = new mongoose.Schema(
     },
     courseContent: [
       {
-        moduleTitle: { type: String },
-        point1: { type: String },
-        point2: { type: String },
-        point3: { type: String },
-        point4: { type: String },
-        point5: { type: String },
-        point6: { type: String },
+        moduleTitle: {
+           type: String
+        },
+        points: [{ 
+          type: String
+        }],
       },
     ],
     pdf: {
