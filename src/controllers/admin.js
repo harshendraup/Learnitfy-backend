@@ -553,8 +553,8 @@ const handleToGetCourses = async (req, res) => {
     if (categoryName) {
       query.categoryName = categoryName;
     }
-    if(url){
-      query.url=url
+    if(query.url){
+      query.url=query.AWS_BUCKET_NAMEurl
     }
 
     const coursesList = await Course.find(query);
