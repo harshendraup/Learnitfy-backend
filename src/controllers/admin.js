@@ -540,9 +540,9 @@ const handleToUploadPdfOfCourse = async (req, res) => {
 
 const handleToGetCourses = async (req, res) => {
   try {
-    const { courseName, courseId, categoryName } = req.query;
+    const { courseName, courseId, categoryName, url } = req.query;
 
-    let query = {};
+    const query = {};
 
     if (courseName) {
       query.courseName = courseName;
@@ -553,8 +553,8 @@ const handleToGetCourses = async (req, res) => {
     if (categoryName) {
       query.categoryName = categoryName;
     }
-    if(query.url){
-      query.url=query.AWS_BUCKET_NAMEurl
+    if(url){
+      query.url=url
     }
 
     const coursesList = await Course.find(query);
@@ -568,13 +568,14 @@ const handleToGetCourses = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error while fetching courses:", err); // Better logging
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
     });
   }
 };
+
 
 const handleToDeleteCourse = async (req, res) => {
   try {
