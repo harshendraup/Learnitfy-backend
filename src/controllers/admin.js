@@ -553,6 +553,9 @@ const handleToGetCourses = async (req, res) => {
     if (categoryName) {
       query.categoryName = categoryName;
     }
+    if(url){
+      query.url=url
+    }
 
     const coursesList = await Course.find(query);
     const courseCount = await Course.countDocuments(query);
