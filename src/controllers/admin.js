@@ -3,6 +3,7 @@ require("dotenv").config();
 const bcrypt = require("bcrypt");
 const { entityIdGenerator } = require("../utils/entityGenerator");
 const Admin = require("../model/admin");
+const mongoose= require('mongoose')
 const Course = require("../model/courses");
 const { Contact } = require("../model/contactForm");
 const sendEmail = require("../utils/email");
@@ -623,7 +624,7 @@ const handleToDeleteCourse = async (req, res) => {
 
 const handleToUpdateCourse = async (req, res) => {
   try {
-    const { courseId, moreAboutCourse, courseDetail, notes, ...restPayload } =
+    const { courseId, moreAboutCourse, courseDetail,courseContent, notes, ...restPayload } =
       req.body;
     const image = req.file;
 
@@ -671,6 +672,21 @@ const handleToUpdateCourse = async (req, res) => {
         updatePayload[`notes.${key}`] = notes[key];
       }
     }
+    if (Array.isArray(courseContent)) {
+      for (const module of courseContent) {
+        if (module._id) {
+          await Course.updateOne(
+            { courseId, "courseContent._id": module._id },
+            {
+              $set: {
+                "courseContent.$.moduleTitle": module.moduleTitle,
+                "courseContent.$.points": module.points,
+              },
+            }
+          );
+        }
+      }
+    }
 
     const updatedCourse = await Course.findOneAndUpdate(
       { courseId },
@@ -690,6 +706,45 @@ const handleToUpdateCourse = async (req, res) => {
     });
   }
 };
+
+const handleToDeleteCourseModule = async (req, res) => {
+  try {
+    const { courseId, _id } = req.body;
+
+    if (!courseId || !_id) {
+      return res.status(400).json({ message: "Invalid payload data" });
+    }
+    const course = await Course.findOne({ courseId });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const result = await Course.updateOne(
+      { courseId },
+      {
+        $pull: {
+          courseContent: { _id: new mongoose.Types.ObjectId(_id) },
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "Module not found or already deleted." });
+    }
+
+    return res.status(200).json({ message: "Module deleted successfully." });
+  } catch (err) {
+    console.error("❌ Error in deleting module:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 
 function parseExcelDate(excelDate) {
   if (typeof excelDate === "number") {
@@ -850,6 +905,7 @@ module.exports = {
   handleToDeleteCategory,
   handleToGetCourses,
   handleToDeleteCourse,
+  handleToDeleteCourseModule,
   handleToUpdateCourse,
   handleToAddContent,
   handleToDeleteAllAdminUsers,

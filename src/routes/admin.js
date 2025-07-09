@@ -21,7 +21,8 @@ const {
   deleteAllGstData,
   handleToGetGstData,
   handleToAddCourseDetails,
-  DeleteEntireDataOfDB
+  DeleteEntireDataOfDB,
+  handleToDeleteCourseModule
 } = require("../controllers/admin");
 
 
@@ -48,6 +49,7 @@ router.post('/add/course/detail',handleToAddCourseDetails)
 router.post('/add/activities',handleToAddAdditionalInformationAboutCourse)
 router.get("/get/courses", handleToGetCourses);
 router.delete("/delete/course", handleToDeleteCourse);
+router.delete('/delete/course/module',handleToDeleteCourseModule)
 router.patch("/update/course", coursesImg.single("image"), handleToUpdateCourse);
 
 router.post("/add/content", handleToAddContent);
