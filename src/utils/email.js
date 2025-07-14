@@ -1,7 +1,6 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-
 const sendEmailWithAttachment = async (to, subject, text, attachmentBuffer, attachmentName, contentType) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -29,7 +28,6 @@ const sendEmailWithAttachment = async (to, subject, text, attachmentBuffer, atta
     const info = await transporter.sendMail(mailOptions);
     console.log("✅ Email sent:", info.response);
     return true;
-
   } catch (error) {
     console.error("❌ Email sending error:", error);
     return false;

@@ -107,10 +107,10 @@ const handleToSendBrochure = async (req, res) => {
       return res.status(400).json({ message: "Email and courseId are required." });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User has already taken a course" });
-    }
+    // const existingUser = await User.findOne({ email });
+    // if (existingUser) {
+    //   return res.status(400).json({ message: "User has already taken a course" });
+    // }
 
     const courseDetail = await Course.findOne({ courseId });
     if (!courseDetail || !courseDetail.pdf) {
@@ -133,11 +133,10 @@ const handleToSendBrochure = async (req, res) => {
     const subject = `Course Brochure - ${courseDetail.courseName}`;
     const text = `Dear Student,
 
-Thank you for your interest in the "${courseDetail.courseName}" course under "${courseDetail.categoryName}".
-
+Thank you for your interest in the "${courseDetail.courseName}" Course.
 Please find attached the brochure with all the necessary details.
 
-If you have any questions or would like to enroll, feel free to reply to this email.
+If you have any questions or would like to enroll, feel free to reply to this email. Or you can Call / Whats app on +91 99839 69869
 
 Best regards,
 Your Learning Team`;
