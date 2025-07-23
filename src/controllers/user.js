@@ -1,18 +1,17 @@
 require("dotenv").config();
-const axios = require('axios');
+const axios = require("axios");
 const { Category } = require("../model/category");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { entityIdGenerator } = require("../utils/entityGenerator");
-const {Enroll }= require("../model/enroll");
+const { Enroll } = require("../model/enroll");
 const Course = require("../model/courses");
 const { Contact } = require("../model/contactForm");
 const { sendEmailWithAttachment } = require("../utils/email");
 const nodemailer = require("nodemailer");
 const path = require("path");
 const AWS = require("aws-sdk");
-const {User} = require('../model/user')
-
+const { User } = require("../model/user");
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -104,7 +103,9 @@ const handleToSendBrochure = async (req, res) => {
     const { email, courseId } = req.body;
 
     if (!email || !courseId) {
-      return res.status(400).json({ message: "Email and courseId are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and courseId are required." });
     }
 
     // const existingUser = await User.findOne({ email });
@@ -120,7 +121,7 @@ const handleToSendBrochure = async (req, res) => {
     let pdfKey = courseDetail.pdf;
     if (pdfKey.startsWith("http")) {
       const urlObj = new URL(pdfKey);
-      pdfKey = decodeURIComponent(urlObj.pathname.substring(1)); 
+      pdfKey = decodeURIComponent(urlObj.pathname.substring(1));
     }
 
     const s3Params = {
@@ -166,7 +167,9 @@ Your Learning Team`;
         user: newUser,
       });
     } else {
-      return res.status(500).json({ message: "Failed to send email. Try again later." });
+      return res
+        .status(500)
+        .json({ message: "Failed to send email. Try again later." });
     }
   } catch (err) {
     console.error("❌ Error sending brochure:", err);
@@ -177,11 +180,8 @@ Your Learning Team`;
   }
 };
 
-
 const getAllBrochureRequests = async (req, res) => {
   try {
-
-
     const users = await User.find({}).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -196,8 +196,6 @@ const getAllBrochureRequests = async (req, res) => {
     });
   }
 };
-
-
 
 const handleToEnrollForCourse = async (req, res) => {
   try {
@@ -266,12 +264,13 @@ const handleToGetEnrolledUser = async (req, res) => {
     }
     const totalEnrollUser = await Enroll.countDocuments(matchQuery);
 
-    res.status(200).json(
-      { message: "Enrolled users:" ,
+    res
+      .status(200)
+      .json({
+        message: "Enrolled users:",
         enrollUser: enrolledObj,
-        totalEnrollUser: totalEnrollUser},
-      
-    );
+        totalEnrollUser: totalEnrollUser,
+      });
   } catch (err) {
     console.error("Error enrolling user for course:", err);
     return res.status(500).json({
@@ -296,8 +295,22 @@ const deleteAllEnquiries = async (req, res) => {
     });
   }
 };
-
-
+const  deleteAllUsers=async(req,res)=>{
+   try{
+    const deleteUsers = await  User.deleteMany({});
+    return res.status(200).json({
+      message: "All users  deleted successfully",
+      deletedCount: deleteUsers.deletedCount,
+    });
+   }
+   catch (err) {
+    console.error("Error deleting contact inquiries:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+}
 
 module.exports = {
   handleToContact,
@@ -307,5 +320,6 @@ module.exports = {
   handleToGetEnrolledUser,
   handleToEnrollForCourse,
   deleteAllContacts,
-  deleteAllEnquiries
+  deleteAllEnquiries,
+  deleteAllUsers
 };

@@ -9,7 +9,7 @@ const {
   handleToEnrollForCourse,
   handleToGetEnrolledUser,
   deleteAllContacts,
-  deleteAllEnquiries
+  deleteAllEnquiries,deleteAllUsers
 } = require("../controllers/user");
 
 router.post("/contact", handleToContact);
@@ -21,5 +21,6 @@ router.get('/brochure/requests',getAllBrochureRequests)
 router.post('/enroll',handleToEnrollForCourse)
 router.get('/get/enroll',handleToGetEnrolledUser)
 router.delete('/delete/enrollUsers',deleteAllEnquiries)
+router.delete('/delete/all',deleteAllUsers)
 
 module.exports = router;
